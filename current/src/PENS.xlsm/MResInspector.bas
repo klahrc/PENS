@@ -29,7 +29,7 @@ Public r As Object 'Recordset
 Public gbCompletedFirstLoad As Boolean
 
 Private Declare Function SHGetFolderPath Lib "shfolder" Alias "SHGetFolderPathA" _
-(ByVal hwndOwner As Long, ByVal nFolder As Long, _
+() '(ByVal hwndOwner As Long, ByVal nFolder As Long, _
 ByVal hToken As Long, ByVal dwFlags As Long, _
 ByVal pszPath As String) As Long
 

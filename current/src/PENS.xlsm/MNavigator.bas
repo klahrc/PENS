@@ -229,7 +229,7 @@ Function loadNavPanel() As Boolean
                 '    prjInfo.PM = "No PM found"
                 'End If
 
-                lNextRow = Val(.Fields("RowID")) + 1
+                lNextRow = Val(.Fields("RowID")) + 2
                 prjInfo.DetStatus = FetchValue(cnConn, "Report", "RowID", Trim(Str(lNextRow)), "Project Code", .Fields("Project Code"))        ' Detailed Project Status
 
 

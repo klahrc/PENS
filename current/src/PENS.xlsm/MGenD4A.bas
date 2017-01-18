@@ -1495,7 +1495,7 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
                 .Cells(i, 27).NumberFormat = "$#,##0"
                 .Cells(i, 28).Value = "=L" & i & "*AF" & i
                 .Cells(i, 28).NumberFormat = "$#,##0"
-                .Cells(i, 29).Value = Trim((FetchValue(cnConn, "Names", "Roles", "Plan - TSC", "Project Code", rstRecordset.Fields("Project Code")))) ' MI %
+                .Cells(i, 29).Value = Trim((FetchValue(cnConn, "Names", "Roles", "Plan - SES", "Project Code", rstRecordset.Fields("Project Code")))) ' MI %
                 .Cells(i, 29).NumberFormat = "0%"
                 .Cells(i, 30).Value = Trim((FetchValue(cnConn, "Names", "Roles", "Plan - SW Amort", "Project Code", rstRecordset.Fields("Project Code")))) ' IG %
                 .Cells(i, 30).NumberFormat = "0%"
