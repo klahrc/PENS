@@ -632,7 +632,7 @@ Private Sub UserForm_Initialize()
     lblSelectedFTE.BackColor = RGB(55, 96, 145)
     lblSelectedCost.BackColor = RGB(55, 96, 145)
     Label6.BackColor = RGB(55, 96, 145)
-    label7.BackColor = RGB(55, 96, 145)
+    Label7.BackColor = RGB(55, 96, 145)
     Label8.BackColor = RGB(55, 96, 145)
 
 

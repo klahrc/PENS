@@ -1552,76 +1552,76 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
 
 
-                If (rstRecordset2.Fields("JAN") <> vbNull) Then
+                If (Trim(rstRecordset2.Fields("JAN")) <> "") Then
                     .Cells(i, 34) = rstRecordset2.Fields("JAN")
                 Else
                     .Cells(i, 34) = ""
                 End If
 
 
-                If (rstRecordset2.Fields("FEB") <> vbNull) Then
+                If Trim((rstRecordset2.Fields("FEB")) <> "") Then
                     .Cells(i, 35) = rstRecordset2.Fields("FEB")
                 Else
                     .Cells(i, 35) = ""
                 End If
 
 
-                If (rstRecordset2.Fields("MAR") <> vbNull) Then
+                If (Trim(rstRecordset2.Fields("MAR")) <> "") Then
                     .Cells(i, 36) = rstRecordset2.Fields("MAR")
                 Else
                     .Cells(i, 36) = ""
                 End If
 
-                If (rstRecordset2.Fields("APR") <> vbNull) Then
+                If (Trim(rstRecordset2.Fields("APR")) <> "") Then
                     .Cells(i, 37) = rstRecordset2.Fields("APR")
                 Else
                     .Cells(i, 37) = ""
                 End If
 
-                If (rstRecordset2.Fields("MAY") <> vbNull) Then
+                If (Trim(rstRecordset2.Fields("MAY")) <> "") Then
                     .Cells(i, 38) = rstRecordset2.Fields("MAY")
                 Else
                     .Cells(i, 38) = ""
                 End If
 
-                If (rstRecordset2.Fields("JUN") <> vbNull) Then
+                If (Trim(rstRecordset2.Fields("JUN")) <> "") Then
                     .Cells(i, 39) = rstRecordset2.Fields("JUN")
                 Else
                     .Cells(i, 39) = ""
                 End If
 
-                If (rstRecordset2.Fields("JUL") <> vbNull) Then
+                If (Trim(rstRecordset2.Fields("JUL")) <> "") Then
                     .Cells(i, 40) = rstRecordset2.Fields("JUL")
                 Else
                     .Cells(i, 40) = ""
                 End If
 
-                If (rstRecordset2.Fields("AUG") <> vbNull) Then
+                If (Trim(rstRecordset2.Fields("AUG")) <> "") Then
                     .Cells(i, 41) = rstRecordset2.Fields("AUG")
                 Else
                     .Cells(i, 41) = ""
                 End If
 
-                If (rstRecordset2.Fields("SEP") <> vbNull) Then
+                If (Trim(rstRecordset2.Fields("SEP")) <> "") Then
                     .Cells(i, 42) = rstRecordset2.Fields("SEP")
                 Else
                     .Cells(i, 42) = ""
                 End If
 
-                If (rstRecordset2.Fields("OCT") <> vbNull) Then
+                If (Trim(rstRecordset2.Fields("OCT")) <> "") Then
                     .Cells(i, 43) = rstRecordset2.Fields("OCT")
                 Else
                     .Cells(i, 43) = ""
                 End If
 
-                If (rstRecordset2.Fields("NOV") <> vbNull) Then
+                If (Trim(rstRecordset2.Fields("NOV")) <> "") Then
                     .Cells(i, 44) = rstRecordset2.Fields("NOV")
                 Else
                     .Cells(i, 44) = ""
                 End If
 
 
-                If (rstRecordset2.Fields("DEC") <> vbNull) Then
+                If (Trim(rstRecordset2.Fields("DEC")) <> "") Then
                     .Cells(i, 45) = rstRecordset2.Fields("DEC")
                 Else
                     .Cells(i, 45) = ""
@@ -1726,8 +1726,8 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
         ' Dashboard NE column formatting
         With .Range(.Cells(2, 7), .Cells(i - 1, 7))
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=($G1/$F1) > 1.1"
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=($G1/$F1) > 1.05"
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=($G2/$F2) > 1.1"
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=($G2/$F2) > 1.05"
 
             With .FormatConditions(1)
                 .SetFirstPriority
@@ -1744,9 +1744,9 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
         ' Dashboard NE - Budget % column formatting
         With .Range(.Cells(2, 9), .Cells(i - 1, 9))
 
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$I1 = """""
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$I1 > 0.05"
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$I1 > 0"
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$I2 = """""
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$I2 > 0.05"
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$I2 > 0"
 
 
             With .FormatConditions(1)
@@ -1767,9 +1767,9 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
         ' Dashboard NE - Revised BL % column formatting
         With .Range(.Cells(2, 11), .Cells(i - 1, 11))
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$K1 = """""
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$K1 > 0.05"
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$K1 > 0"
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$K2 = """""
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$K2 > 0.05"
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$K2 > 0"
 
 
             With .FormatConditions(1)
@@ -1791,9 +1791,9 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
         ' Reporting NE - Budget % column formatting
         With .Range(.Cells(2, 14), .Cells(i - 1, 14))
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$N1 = """""
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$N1 > 0.05"
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$N1 > 0"
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$N2 = """""
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$N2 > 0.05"
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$N2 > 0"
 
 
             With .FormatConditions(1)
@@ -1815,9 +1815,9 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
         ' Reporting NE - Revised BL % column formatting
         With .Range(.Cells(2, 16), .Cells(i - 1, 16))
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$P1 = """""
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$P1 > 0.05"
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$P1 > 0"
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$P2 = """""
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$P2 > 0.05"
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$P2 > 0"
 
 
             With .FormatConditions(1)
@@ -1840,9 +1840,9 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
         ' Reporting NE - Dashboard NE % column formatting
         With .Range(.Cells(2, 18), .Cells(i - 1, 18))
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$R1 = """""
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$R1 > 0.05"
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$R1 > 0"
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$R2 = """""
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$R2 > 0.05"
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$R2 > 0"
 
 
             With .FormatConditions(1)
@@ -1865,9 +1865,9 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
         ' Project Status (calculated) column formatting
         With .Range(.Cells(2, 21), .Cells(i - 1, 21))
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$U1 =""RED"""
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$U1 =""YELLOW"""
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$U1 =""GREEN"""
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$U2 =""RED"""
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$U2 =""YELLOW"""
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$U2 =""GREEN"""
 
             With .FormatConditions(1)
                 .SetFirstPriority
@@ -1890,9 +1890,9 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
         ' Project Status (Dashboard) column formatting
         With .Range(.Cells(2, 22), .Cells(i - 1, 22))
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$V1 =""RED"""
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$V1 =""YELLOW"""
-            .FormatConditions.Add Type:=xlExpression, Formula1:="=$V1 =""GREEN"""
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$V2 =""RED"""
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$V2 =""YELLOW"""
+            .FormatConditions.Add Type:=xlExpression, Formula1:="=$V2 =""GREEN"""
 
             With .FormatConditions(1)
                 .SetFirstPriority

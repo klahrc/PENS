@@ -199,10 +199,10 @@ Function loadNavPanel() As Boolean
                 prjInfo.lRow = Val(.Fields("RowID"))
                 prjInfo.ProjCode = .Fields("Project Code")
 
-                If .Fields("Project Name") <> vbNull Then prjInfo.ProjName = .Fields("Project Name")
-                If .Fields("Delivery Leader") <> vbNull Then prjInfo.DeliveryLeader = .Fields("Delivery Leader")
-                If .Fields("Activation Status") <> vbNull Then prjInfo.ActivationStatus = .Fields("Activation Status")
-                If .Fields("CAT") <> vbNull Then prjInfo.Category = .Fields("CAT")
+                If Trim(.Fields("Project Name")) <> "" Then prjInfo.ProjName = .Fields("Project Name")
+                If Trim(.Fields("Delivery Leader")) <> "" Then prjInfo.DeliveryLeader = .Fields("Delivery Leader")
+                If Trim(.Fields("Activation Status")) <> "" Then prjInfo.ActivationStatus = .Fields("Activation Status")
+                If Trim(.Fields("CAT")) <> "" Then prjInfo.Category = .Fields("CAT")
 
                 prjInfo.Status = Trim((FetchValue(cnConn, "Names", "Roles", "Actual - MI", "Project Code", .Fields("Project Code"))))        ' Project Status
                 prjInfo.IYNE = Format(FetchValue(cnConn, "Do not remove1", "Roles", "NE (Actual + Rem. Plan)", "Project Code", .Fields("Project Code")), "#0")        ' Dashboard NE
@@ -219,7 +219,7 @@ Function loadNavPanel() As Boolean
                 prjInfo.YTDActuals = Format(FetchValue(cnConn, "Names", "Roles", "Actual - Travel", "Project Code", rstRecordset.Fields("Project Code")), "#0")        'YTD Actuals
                 '''prjInfo.PM = Trim(FetchValue(cnConn, "Names", "Roles", "PM", "Project Code", rstRecordset.fields("Project Code")))        'PM Name
 
-                If .Fields("Project Manager") <> vbNull Then
+                If Trim(.Fields("Project Manager")) <> "" Then
                     prjInfo.PM = .Fields("Project Manager")
                 Else
                     prjInfo.PM = "No PM found"

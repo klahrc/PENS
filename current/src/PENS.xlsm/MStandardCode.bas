@@ -686,7 +686,7 @@ Public Function FetchValue(cn As Object, sRetField As String, sCondField1 As Str
     If rstRecordset.EOF Then                               ' Didn't find a thing!
         a = ""
     Else
-        If (rstRecordset.Fields(sRetField) <> vbNull) Then
+        If (Trim(rstRecordset.Fields(sRetField)) <> "") Then
             a = rstRecordset.Fields(sRetField)
         Else
             a = ""
@@ -700,7 +700,7 @@ Public Function FetchValue(cn As Object, sRetField As String, sCondField1 As Str
 
     Exit Function
 kk:
-    ''''a = ""
+    '''a = ""
 End Function
 
 '---------------------------------------------------------------------------------------
