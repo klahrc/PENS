@@ -64,8 +64,6 @@ Private Sub cmdOK_Click()
 
 End Sub
 
-
-
 Private Sub UserForm_Initialize()
     Dim lvwItem As ListItem
 
@@ -150,6 +148,8 @@ End Sub
 
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
 
+    '' Set m_clsAnchors = Nothing
+    
     If CloseMode = 0 Then
         Cancel = True
     End If
@@ -157,4 +157,11 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     Call cmdOK_Click
 End Sub
 
+
+
+Private Sub UserForm_Terminate()
+
+    Set m_clsAnchors = Nothing
+    
+End Sub
 

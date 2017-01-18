@@ -48,77 +48,69 @@ End Sub
 
 Private Sub CmdFontSizePlus_()
 
-    Private Sub cmdOK_Click()
-        gFrmDetStatus.Hide
-    End Sub
+Private Sub cmdOK_Click()
+    gFrmDetStatus.Hide
+End Sub
 
+Private Sub UserForm_Initialize()
 
-    Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    Set m_clsAnchors = New CAnchors
 
-        '''Set m_clsAnchors = Nothing
+    Set m_clsAnchors.Parent = Me
 
-        If CloseMode = 0 Then
-            Cancel = True
-        End If
+    ' restrict minimum size of userform
+    m_clsAnchors.MinimumWidth = 45
+    m_clsAnchors.MinimumHeight = 250
 
-        Call cmdOK_Click
+    With m_clsAnchors
 
-
-    End Sub
-
-
-    Private Sub UserForm_Initialize()
-
-        Set m_clsAnchors = New CAnchors
-
-        Set m_clsAnchors.Parent = Me
-
-        ' restrict minimum size of userform
-        m_clsAnchors.MinimumWidth = 45
-        m_clsAnchors.MinimumHeight = 250
-
-        With m_clsAnchors
-
-            With .Anchor("frmFontSize")
-                .AnchorStyle = enumAnchorStyleLeft Or enumAnchorStyleBottom
-                .MinimumHeight = 36
-            End With
-
-
-            .Anchor("txtDetStatus").AnchorStyle = enumAnchorStyleLeft Or enumAnchorStyleRight Or _
-            enumAnchorStyleBottom Or enumAnchorStyletop
-            .Anchor("cmdOK").AnchorStyle = enumAnchorStyleBottom Or enumAnchorStyleRight
-            .Anchor("cmdOK").MinimumHeight = 24
-
-            .Anchor("lblStatusReport").AnchorStyle = enumAnchorStyletop Or enumAnchorStyleRight Or enumAnchorStyleLeft
-            .Anchor("lblDiv1").AnchorStyle = enumAnchorStyleRight Or enumAnchorStyleLeft Or enumAnchorStyleBottom
-
+        With .Anchor("frmFontSize")
+            .AnchorStyle = enumAnchorStyleLeft Or enumAnchorStyleBottom
+            .MinimumHeight = 36
         End With
 
-        ' live updates whilst resizing
-        '''CheckBox1.Value = True
-        '''ListBox1.RowSource = "B12:B19"
 
-        m_clsAnchors.UpdateWhilstDragging = True
+        .Anchor("txtDetStatus").AnchorStyle = enumAnchorStyleLeft Or enumAnchorStyleRight Or _
+                                              enumAnchorStyleBottom Or enumAnchorStyletop
+        .Anchor("cmdOK").AnchorStyle = enumAnchorStyleBottom Or enumAnchorStyleRight
+        .Anchor("cmdOK").MinimumHeight = 24
 
-        Me.lblStatusReport.BackColor = RGB(55, 96, 145)
+        .Anchor("lblStatusReport").AnchorStyle = enumAnchorStyletop Or enumAnchorStyleRight Or enumAnchorStyleLeft
+        .Anchor("lblDiv1").AnchorStyle = enumAnchorStyleRight Or enumAnchorStyleLeft Or enumAnchorStyleBottom
 
-        Me.StartUpPosition = 0
-        Me.Top = Application.Top + 100
-        Me.Left = Application.Left + Application.Width - Me.Width - 25
+    End With
 
-        Me.txtDetStatus.SetFocus
+    ' live updates whilst resizing
+    '''CheckBox1.Value = True
+    '''ListBox1.RowSource = "B12:B19"
 
-    End Sub
+    m_clsAnchors.UpdateWhilstDragging = True
 
+    Me.lblStatusReport.BackColor = RGB(55, 96, 145)
 
+    Me.StartUpPosition = 0
+    Me.Top = Application.Top + 100
+    Me.Left = Application.Left + Application.Width - Me.Width - 25
 
-    Private Sub UserForm_Terminate()
+    Me.txtDetStatus.SetFocus
 
-        Set m_clsAnchors = Nothing
+End Sub
 
-    End Sub
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
 
+    '''Set m_clsAnchors = Nothing
 
+    If CloseMode = 0 Then
+        Cancel = True
+    End If
 
+    Call cmdOK_Click
+
+End Sub
+
+Private Sub UserForm_Terminate()
+
+    Set m_clsAnchors = Nothing
+
+End Sub
 

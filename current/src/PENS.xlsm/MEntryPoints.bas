@@ -153,7 +153,7 @@ Function OpenAndAdjustDash(ByVal bDashIsOpen As Boolean) As Workbook
     Dim wbNew As Workbook
 
     If (MsgBox("In order to guarantee a smooth navigation experience, PENS requires to remove all filters and frozen panes from the Portfolio Plan. Are you OK to proceed? " + _
-        vbNewLine, vbQuestion + vbYesNo, "PENS - Navigation") = vbYes) Then
+               vbNewLine, vbQuestion + vbYesNo, "PENS - Navigation") = vbYes) Then
 
         If Not bDashIsOpen Then
             Set wbNew = openDashboardFile()
@@ -189,7 +189,7 @@ End Function
 ' Pending:
 ' Comments: Developed using Excel 2007
 '---------------------------------------------------------------------------------------
-Public Sub PENS2007Reports(ByVal sType As String)          ' Do I need to pass control as a parameter?????????????????????
+Public Sub PENS2007Reports(ByVal sType As String)        ' Do I need to pass control as a parameter?????????????????????
     Dim sPathPP As String
     Dim sFolderRS As String
     Dim sFileNameRS As String
@@ -233,7 +233,7 @@ Public Sub PENS2007Reports(ByVal sType As String)          ' Do I need to pass c
                 MsgBox "No access to the network. You can still use Portfolio Ensemble with local files..."
 
                 SaveSetting "PENS", "General", "Local_Folder", "True"
-                gbUse_Local_Folder = True                  'GetSetting(, , )
+                gbUse_Local_Folder = True        'GetSetting(, , )
             Else
                 Call LogActivity("PENS2007Reports")        ' Make it function to test?
             End If
@@ -248,9 +248,9 @@ Public Sub PENS2007Reports(ByVal sType As String)          ' Do I need to pass c
             If SourceDataLoad(sPathPP, sFolderRS, sFileNameRS) Then
 
                 ' Saving in case some folder changed during SourceDataLoad
-                Call SaveAppSettings                       ' Make it function?
+                Call SaveAppSettings        ' Make it function?
 
-                Call Access_MakeTable(sPathPP, False)      ' Make it a function to test!!!!
+                Call Access_MakeTable(sPathPP, False)        ' Make it a function to test!!!!
 
                 iRet = ProduceReports(sType, sPathPP, sFolderRS, sFileNameRS)
 
@@ -264,10 +264,10 @@ Public Sub PENS2007Reports(ByVal sType As String)          ' Do I need to pass c
                 If (iRet > 0) Then
                     '!!!!!!lblChkSum.Caption = "Pivot Checksum OK (" + CStr(iRet) + ")"
                     '@@@@@@@@@@@@@@ i = MsgBox("All Good...", vbOKOnly, "CONGRATS!")
-                ElseIf iRet = -1 Then                      'CheckSum failed
+                ElseIf iRet = -1 Then        'CheckSum failed
                     '!!!!!!lblChkSum.Caption = "WARNING:Pivot Checksum failed!"
                     '@@@@@@@@@i = MsgBox("Oops...Pivot Checksum failed", vbCritical, "ERROR")
-                ElseIf iRet = -2 Then                      'Couldn't connect to Source Data (Portfolio Plan)
+                ElseIf iRet = -2 Then        'Couldn't connect to Source Data (Portfolio Plan)
                     '@@@@@@@@@@@i = MsgBox("Can't connect to source file/s" + Chr(10) + "Contact your provider...", vbCritical, "ERROR")
                     '''Close D4A file!
                     ActiveWorkbook.Close savechanges:=False
@@ -320,7 +320,7 @@ End Sub
 ' Pending:
 ' Comments: Developed using Excel 2007
 '---------------------------------------------------------------------------------------
-Public Sub PENS2007Extract(control As Object)              ' Do I need to pass control as a parameter?????????????????????
+Public Sub PENS2007Extract(control As Object)        ' Do I need to pass control as a parameter?????????????????????
     Dim i As Long
     Dim lOK2Proceed As Boolean
 
@@ -414,7 +414,7 @@ End Sub
 ' Pending:
 ' Comments: Developed using Excel 2007
 '---------------------------------------------------------------------------------------
-Public Sub PENS2007Navigation(control As Object)           ' Do I need to pass control as a parameter?????????????????????
+Public Sub PENS2007Navigation(control As Object)        ' Do I need to pass control as a parameter?????????????????????
     Dim sPathPP As String
     Dim sFolderRS As String
     Dim sFileNameRS As String
@@ -443,7 +443,7 @@ Public Sub PENS2007Navigation(control As Object)           ' Do I need to pass c
         If Not bWriteDebug(msMODULE, sSOURCE, "***NEW Run start") Then Err.Raise glCANT_WRITE_DEBUG_FILE
     End If
 
-    Call RetrieveAppSettings                               'Make it function to test??
+    Call RetrieveAppSettings        'Make it function to test??
 
 
     ' Automatic check (Manual = false)
@@ -466,19 +466,16 @@ Public Sub PENS2007Navigation(control As Object)           ' Do I need to pass c
                 SaveSetting "PENS", "General", "Use_Local_Folder", "True"
                 gbUse_Local_Folder = GetSetting("PENS", "General", "Use_Local_Folder")
             Else
-                Call LogActivity("PENS2007Navigation")     ' Make it function to test?
+                Call LogActivity("PENS2007Navigation")        ' Make it function to test?
             End If
 
 
             If SourceDataLoad(sPathPP, sFolderRS, sFileNameRS) Then
 
                 ' Saving in case some folder changed during SourceDataLoad
-                Call SaveAppSettings                       ' Make it function?
+                Call SaveAppSettings        ' Make it function?
 
-                Call Access_MakeTable(sPathPP, True)       ' Make it a function to test!!!!
-
-                ' ddddddddddddddddddddddddddddddddddddd
-
+                Call Access_MakeTable(sPathPP, True)        ' Make it a function to test!!!!
 
                 bDashIsOpen = IsDashboardOpen()
                 If Not bDashIsOpen Then
@@ -487,7 +484,7 @@ Public Sub PENS2007Navigation(control As Object)           ' Do I need to pass c
                     Else
                         ' Make it a tip...
                         'MsgBox "TIP: You can open the Portfolio Plan at any time clicking on the Local Guide image..." + vbNewLine + vbNewLine & _
-                        '       "IMPORTANT: If you have the Porfolio Plan spreadsheet already open, you must remove filters and freezes to ensure a smooth navigation!", vbInformation + vbOKOnly, "PENS - Help"
+                         '       "IMPORTANT: If you have the Porfolio Plan spreadsheet already open, you must remove filters and freezes to ensure a smooth navigation!", vbInformation + vbOKOnly, "PENS - Help"
                     End If
                 Else
                     Set wbNew = OpenAndAdjustDash(bDashIsOpen)
@@ -519,13 +516,13 @@ Public Sub PENS2007Navigation(control As Object)           ' Do I need to pass c
 
 
                 ' Assuming there is at least one project (goto the last and come back to the first in the Projects listbox)
-                gFrmNavPanel.lstProjects.ListIndex = gFrmNavPanel.lstProjects.ListCount - 1 ''ojo que esto puede fallar en algun momento
-                gFrmNavPanel.lstProjects.ListIndex = 0     ' This time goes always to the first!!!
+                gFrmNavPanel.lstProjects.ListIndex = gFrmNavPanel.lstProjects.ListCount - 1        ''ojo que esto puede fallar en algun momento
+                gFrmNavPanel.lstProjects.ListIndex = 0        ' This time goes always to the first!!!
 
             End If
-        End If                                             'OK2Proceed
+        End If        'OK2Proceed
 
-        Else                                                   'CheckAndUpdate
+    Else        'CheckAndUpdate
 
         MsgBox "Please restart Excel to complete the update process...", vbCritical, "PENS"
     End If
@@ -541,9 +538,16 @@ ErrorExit:
 
     Close #giDebugFile
     Unload gFrmNavPanel
+    Unload gFrmCostDet
+    Unload gFrmDetStatus
+    
     Set gFrmNavPanel = Nothing
     Set guDictProj = Nothing
     Set gColPrjInfo = Nothing
+    Set wbNew = Nothing
+    Set gFrmNavPanel = Nothing
+    Set gFrmCostDet = Nothing
+    Set gFrmDetStatus = Nothing
 
     On Error GoTo 0
 
@@ -568,7 +572,7 @@ End Sub
 ' Pending:
 ' Comments: Developed using Excel 2007
 '---------------------------------------------------------------------------------------
-Public Sub PENS_Inspector(control As Object)               ' Do I need to pass control as a parameter?????????????????????
+Public Sub PENS_Inspector(control As Object)        ' Do I need to pass control as a parameter?????????????????????
     Dim sPathPP As String
     Dim sFolderRS As String
     Dim sFileNameRS As String
@@ -595,7 +599,7 @@ Public Sub PENS_Inspector(control As Object)               ' Do I need to pass c
         If Not bWriteDebug(msMODULE, sSOURCE, "***NEW Run start") Then Err.Raise glCANT_WRITE_DEBUG_FILE
     End If
 
-    Call RetrieveAppSettings                               'Make it function to test??
+    Call RetrieveAppSettings        'Make it function to test??
 
     ' Automatic check (Manual = false)
     If Not CheckAndUpdate(gbConnected2Network, False) Then
@@ -617,7 +621,7 @@ Public Sub PENS_Inspector(control As Object)               ' Do I need to pass c
                 SaveSetting "PENS", "General", "Use_Local_Folder", "True"
                 gbUse_Local_Folder = True
             Else
-                Call LogActivity("PENS_Inspector")         ' Make it function to test?
+                Call LogActivity("PENS_Inspector")        ' Make it function to test?
             End If
 
             ' If the user pressed the Cancel button, raise a custom
@@ -654,7 +658,7 @@ Public Sub PENS_Inspector(control As Object)               ' Do I need to pass c
             If SourceDataLoad(sPathPP, sFolderRS, sFileNameRS) Then
 
                 ' Saving in case some folder changed during SourceDataLoad
-                Call SaveAppSettings                       ' Make it function?
+                Call SaveAppSettings        ' Make it function?
 
                 gbCompletedFirstLoad = False
 
@@ -731,7 +735,7 @@ End Sub
 ' Pending:
 ' Comments: Developed using Excel 2007
 '---------------------------------------------------------------------------------------
-Public Sub PENS2007Settings(control As Object)             ' Do I need to pass control as a parameter?????????????????????
+Public Sub PENS2007Settings(control As Object)        ' Do I need to pass control as a parameter?????????????????????
     Dim i As Variant
     Dim lOK2Proceed As Boolean
 
@@ -751,7 +755,7 @@ Public Sub PENS2007Settings(control As Object)             ' Do I need to pass c
         If Not bWriteDebug(msMODULE, sSOURCE, "***NEW Run start") Then Err.Raise glCANT_WRITE_DEBUG_FILE
     End If
 
-    Call RetrieveAppSettings                               'Make it function to test??
+    Call RetrieveAppSettings        'Make it function to test??
 
     ' Automatic check (Manual = false)
     If Not CheckAndUpdate(gbConnected2Network, False) Then
@@ -773,7 +777,7 @@ Public Sub PENS2007Settings(control As Object)             ' Do I need to pass c
                 SaveSetting "PENS", "General", "Use_Local_Folder", "True"
                 gbUse_Local_Folder = True
             Else
-                Call LogActivity("PENS2007Settings")       ' Make it function to test?
+                Call LogActivity("PENS2007Settings")        ' Make it function to test?
             End If
 
             ' If the user pressed the Cancel button, raise a custom
@@ -785,15 +789,15 @@ Public Sub PENS2007Settings(control As Object)             ' Do I need to pass c
             Set gFrmSettings = New frmSettings
             Load gFrmSettings
 
-            gbInitialized = False                          ' Some activities should wait until the form is initialized
-            If Not gFrmSettings.Initialize() Then          ' If UserForm initialization failed, raise a custom error.
+            gbInitialized = False        ' Some activities should wait until the form is initialized
+            If Not gFrmSettings.Initialize() Then        ' If UserForm initialization failed, raise a custom error.
                 '    Err.Raise glCANT_INITIALIZE
             Else
                 gbInitialized = True
 
-                gFrmSettings.Show (False)                  ' Show form modeless
+                gFrmSettings.Show (False)        ' Show form modeless
 
-                DoEvents                                   ' Do I need this?????????????????????????????
+                DoEvents        ' Do I need this?????????????????????????????
 
 
 
@@ -847,7 +851,7 @@ End Sub
 ' Pending:
 ' Comments: Developed using Excel 2007
 '---------------------------------------------------------------------------------------
-Public Sub PENS2007Feedback(control As Object)             ' Do I need to pass control as a parameter?????????????????????
+Public Sub PENS2007Feedback(control As Object)        ' Do I need to pass control as a parameter?????????????????????
     Const sSOURCE As String = "PENS2007Feedback"
 
     On Error GoTo PENS2007FEEDBACK_Error
@@ -876,10 +880,10 @@ Public Sub PENS2007Feedback(control As Object)             ' Do I need to pass c
     Set OutMail = OutApp.CreateItem(0)
 
     strbody = "We look forward for your feedback!" & vbNewLine & vbNewLine & _
-    "From new functionality to simple observations about how to improve this tool. " & _
-    "Your time is appreciated and we promise to assess and respond ASAP" & vbNewLine & vbNewLine & _
-    "Thank you!" & vbNewLine & _
-    "The PENS team..."
+              "From new functionality to simple observations about how to improve this tool. " & _
+              "Your time is appreciated and we promise to assess and respond ASAP" & vbNewLine & vbNewLine & _
+              "Thank you!" & vbNewLine & _
+              "The PENS team..."
 
     On Error Resume Next
     With OutMail
@@ -934,7 +938,7 @@ End Sub
 ' Pending:
 ' Comments: Developed using Excel 2007
 '---------------------------------------------------------------------------------------
-Public Sub PENS2007Issue(control As Object)                ' Do I need to pass control as a parameter?????????????????????
+Public Sub PENS2007Issue(control As Object)        ' Do I need to pass control as a parameter?????????????????????
     Const sSOURCE As String = "PENS2007Issue"
     Dim spath As String
 
@@ -966,11 +970,11 @@ Public Sub PENS2007Issue(control As Object)                ' Do I need to pass c
     Set OutMail = OutApp.CreateItem(0)
 
     strbody = "We are sorry about the inconvenience!" & vbNewLine & vbNewLine & _
-    "Please send us an email with a description of the issue, screenshots, etc. " & _
-    "An error log has been already attached to this email." & vbNewLine & vbNewLine & _
-    "We'll reply to you ASAP." & vbNewLine & vbNewLine & _
-    "Regards," & vbNewLine & _
-    "The PENS team..." & vbNewLine & vbNewLine
+              "Please send us an email with a description of the issue, screenshots, etc. " & _
+              "An error log has been already attached to this email." & vbNewLine & vbNewLine & _
+              "We'll reply to you ASAP." & vbNewLine & vbNewLine & _
+              "Regards," & vbNewLine & _
+              "The PENS team..." & vbNewLine & vbNewLine
 
     On Error Resume Next
     With OutMail
@@ -1025,7 +1029,7 @@ End Sub
 ' Pending:
 ' Comments: Developed using Excel 2007
 '---------------------------------------------------------------------------------------
-Public Sub PENS2007RelNotes(control As Object)             ' Do I need to pass control as a parameter?????????????????????
+Public Sub PENS2007RelNotes(control As Object)        ' Do I need to pass control as a parameter?????????????????????
     Const sSOURCE As String = "PENS2007RelNotes"
     Dim sReleaseNotes As String
 
@@ -1184,7 +1188,7 @@ End Sub
 ' Pending:
 ' Comments: Developed using Excel 2007
 '---------------------------------------------------------------------------------------
-Public Sub PENS2007About(control As Object)                ' Do I need to pass control as a parameter?????????????????????
+Public Sub PENS2007About(control As Object)        ' Do I need to pass control as a parameter?????????????????????
     Const sSOURCE As String = "PENS2007About"
     Dim sReleaseNotes As String
 
@@ -1246,7 +1250,7 @@ End Sub
 ' Pending:
 ' Comments: Developed using Excel 2007
 '---------------------------------------------------------------------------------------
-Public Sub PENS2007Tips(control As Object)                 ' Do I need to pass control as a parameter?????????????????????
+Public Sub PENS2007Tips(control As Object)        ' Do I need to pass control as a parameter?????????????????????
     Const sSOURCE As String = "PENS2007Tips"
     Dim sReleaseNotes As String
 

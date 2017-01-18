@@ -17,6 +17,8 @@ Option Explicit
 
 Dim m_ProjList As Collection
 
+
+
 '---------------------------------------------------------------------------------------
 ' Method : UpdDetCostForm
 ' Author : cklahr
@@ -294,7 +296,7 @@ End Sub
 '    Dim lPos As Long'
 
 '    If (MsgBox("In order to guarantee a smooth navigation experience, PENS requires to remove all filters and frozen panes from the Portfolio Plan. Are you OK to proceed? " + _
-'               vbNewLine, vbQuestion + vbYesNo, "PENS - Navigation") = vbYes) Then
+     '               vbNewLine, vbQuestion + vbYesNo, "PENS - Navigation") = vbYes) Then
 
 '        Set wbNew = openDashboardFile()        ' Make it a function to test!!!
 
@@ -353,10 +355,10 @@ Private Sub updateNavigationPanel()
 
 
     j = loadProjects(m_ProjList, Me.lstProjects, _
-    Me.cmbDeliveryLeader.List(Me.cmbDeliveryLeader.ListIndex), _
-    Me.cmbActivationStatus.List(Me.cmbActivationStatus.ListIndex), _
-    Me.cmbCategory.List(Me.cmbCategory.ListIndex), _
-    Me.txtSearch.Value)        ''''Make it a function to test!!!!
+                     Me.cmbDeliveryLeader.List(Me.cmbDeliveryLeader.ListIndex), _
+                     Me.cmbActivationStatus.List(Me.cmbActivationStatus.ListIndex), _
+                     Me.cmbCategory.List(Me.cmbCategory.ListIndex), _
+                     Me.txtSearch.Value)        ''''Make it a function to test!!!!
 
     If j > 0 Then
         ''''''' DALE Me.Caption = "The Local Guide - 1/" + Str(j)
@@ -526,5 +528,23 @@ Private Sub UserForm_Initialize()
 
     End With
 End Sub
+
+
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+
+    Unload gFrmDetStatus
+    Unload gFrmCostDet
+
+End Sub
+
+'Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+'    If CloseMode = 0 Then
+'        gFrmDetStatus.Hide
+'        gFrmCostDet.Hide
+'        Me.Hide
+'    End If
+'End Sub
+
+
 
 
