@@ -44,7 +44,7 @@ Public Function openResourceFile() As Workbook
     '     sPathRS = gsPP_Network_Folder + "\" + gsPP_Filename
     ' End If
 
-    sPathRS = "C:\users\cklahr\Documents\Data\Resource Tracking 2016.xlsm"
+    sPathRS = "C:\users\cklahr\Documents\Data\Resource Tracking 2017.xlsm"
 
     On Error Resume Next
 
@@ -529,7 +529,7 @@ Sub Access_Resources()
     On Error GoTo errHandler
 
     oCatalog.Create "provider='Microsoft.ACE.OLEDB.12.0';" & "Data Source=" & stDB
-    sFile = "C:\users\cklahr\Documents\Data\Resource Tracking 2016.xlsm"
+    sFile = "C:\users\cklahr\Documents\Data\Resource Tracking 2017.xlsm"
 
 
     xlLoc = "'" & sFile & "'[Excel 12.0;HDR=YES;IMEX=1;]"        '    '''' IMPORT EVERYTHING AS STRING!!!!
