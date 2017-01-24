@@ -20,6 +20,15 @@ Private Const MINNEGVAR As Double = -25000
 
 Private Const msMODULE As String = "MGenD4A"
 
+'---------------------------------------------------------------------------------------
+' Method : CondFormat
+' Author : cklahr
+' Date   : 1/23/2017
+' Purpose:
+' Arguments:
+' Pending:
+' Comments:
+'---------------------------------------------------------------------------------------
 Sub CondFormat(r As Range)
     Dim cs As ColorScale
 
