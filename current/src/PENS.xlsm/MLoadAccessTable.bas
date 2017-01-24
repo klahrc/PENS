@@ -73,7 +73,8 @@ Sub Access_MakeTable(ByVal sFile As String, ByVal bAllText As Boolean)
                 .Append "OCT", adDouble
                 .Append "NOV", adDouble
                 .Append "DEC", adDouble
-                .Append "Do not remove1", adVarWChar
+                ''''''''.Append "Do not remove1", adVarWChar
+                .Append "Do not remove1", adDouble
                 .Append "Do not remove2", adVarWChar
                 .Append "Names", adVarWChar
                 .Append "Report", adLongVarWChar

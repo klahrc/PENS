@@ -205,7 +205,7 @@ Function ProduceReports(ByVal sType As String, ByVal sFilePP As String, ByVal sF
             .lstStatus.TopIndex = ufUpdate.lstStatus.ListCount - 1
             DoEvents
 
-            dGrandTotalNES = Gen_NES_Short_GC(wbNew, sFilePP)
+            dGrandTotalNES = GenPT_CS(wbNew, PC)
 
             .lstStatus.Selected(ufUpdate.lstStatus.ListCount - 1) = True
             .lstStatus.List(ufUpdate.lstStatus.ListCount - 1) = "Consulting Seasonality report complete"
@@ -217,7 +217,7 @@ Function ProduceReports(ByVal sType As String, ByVal sFilePP As String, ByVal sF
             .lstStatus.TopIndex = ufUpdate.lstStatus.ListCount - 1
             DoEvents
 
-            dGrandTotalNES = Gen_NES_Short_GC(wbNew, sFilePP)
+            dGrandTotalNES = GenPT_IGLS(wbNew, PC)
 
             .lstStatus.Selected(ufUpdate.lstStatus.ListCount - 1) = True
             .lstStatus.List(ufUpdate.lstStatus.ListCount - 1) = "IG Labour Seasonality report complete"

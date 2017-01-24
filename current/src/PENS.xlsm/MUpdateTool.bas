@@ -53,6 +53,7 @@ Public Function CheckAndUpdate(ByRef bC2N As Boolean, Optional bManual As Boolea
     ' Assumption is that there won't be update
     CheckAndUpdate = False
 
+    ' Connected to Network?
     bC2N = False
 
 
@@ -63,7 +64,7 @@ Public Function CheckAndUpdate(ByRef bC2N As Boolean, Optional bManual As Boolea
 
     With mcUpdate
         'Set intial values of class
-        'Current build
+        'Current build extracted from worksheet (see named ranges)
         .Build = CDbl(gwsConfig.Range(gsPENS_VERSION))
         'Name of this app, probably a global variable, such as appname
         .AppName = "PENS"
@@ -75,6 +76,7 @@ Public Function CheckAndUpdate(ByRef bC2N As Boolean, Optional bManual As Boolea
         .Manual = bManual
 
 
+        ' Try first to install Beta versions if part of the program and it's an allowed user
         If gbJoin_BETA_Program And bIsAllowedBetaUser(GetUserName()) Then
             sUpdLocation = gwsConfig.Range(gsUPDATE_FOLDER) + "\BETA"
 
@@ -90,7 +92,13 @@ Public Function CheckAndUpdate(ByRef bC2N As Boolean, Optional bManual As Boolea
                 bC2N = True
                 .Connected2Network = True
 
-                Call registerIgridOCX
+                
+                '*************************************************************************************************************************************
+                '
+                ' Call registerIgridOCX
+                '
+                '*************************************************************************************************************************************
+                
                 CheckAndUpdate = .DoUpdate(True)
             End If
         End If
@@ -113,7 +121,10 @@ Public Function CheckAndUpdate(ByRef bC2N As Boolean, Optional bManual As Boolea
             bC2N = True
             .Connected2Network = True
 
-            Call registerIgridOCX
+            '*************************************************************************************************************************************
+            ' Call registerIgridOCX
+            '*************************************************************************************************************************************
+            
             CheckAndUpdate = .DoUpdate(False)
         End If
 

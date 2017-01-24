@@ -308,21 +308,23 @@ Sub Setup()
             Exit Sub
         End If
 
-
-        ' Install iGrid500 OCX if not installed already
-        If Not iGridOcxRegistered() Then
-            ' Copy iGrid500 OCX to Addin folder
-            FileCopy msCurrentAddInPath & Application.PathSeparator & gsOCXFilename, gsPath & gsOCXFilename
-            '''''''''''''FileCopy msCurrentAddInPath & Application.PathSeparator & gsOCXFilename, "C:\RefKK\" & gsOCXFilename
-
-            ' Register from Addin folder
-            Call RegisterFile(gsPath & gsOCXFilename)
-            ''''''''''''''Call RegisterFile("C:\RefKK\" & gsOCXFilename)
-        End If
-
-        ' Add Reference to VBE for iGrid500.ocx
-        Call AddReference
-
+'*************************************************************************************************************************************
+'*************************************************iGdrid500 section - UNCOMMENT FOR NEXT RELEASE**************************************
+'*************************************************************************************************************************************
+'        ' Install iGrid500 OCX if not installed already
+'        If Not iGridOcxRegistered() Then
+'            ' Copy iGrid500 OCX to Addin folder
+'            FileCopy msCurrentAddInPath & Application.PathSeparator & gsOCXFilename, gsPath & gsOCXFilename
+'            '''''''''''''FileCopy msCurrentAddInPath & Application.PathSeparator & gsOCXFilename, "C:\RefKK\" & gsOCXFilename
+'
+'            ' Register from Addin folder
+'            Call RegisterFile(gsPath & gsOCXFilename)
+'            ''''''''''''''Call RegisterFile("C:\RefKK\" & gsOCXFilename)
+'        End If
+'
+'        ' Add Reference to VBE for iGrid500.ocx
+'        Call AddReference
+'*************************************************************************************************************************************
 
         Err.Clear
         'Copy addin to install path
@@ -405,11 +407,15 @@ Sub Uninstall()
         ' Unregister addin from Excel
         ClearAddinRegister
 
-        ' Delete Reference from VBE for iGrid500.ocx
-        Call DeleteReference
-
-        ' UnRegister OCX from Addin folder
-        Call UnRegisterFile(gsPath & gsOCXFilename)
+'*************************************************************************************************************************************
+'*************************************************iGdrid500 section - UNCOMMENT FOR NEXT RELEASE**************************************
+'*************************************************************************************************************************************
+'        ' Delete Reference from VBE for iGrid500.ocx
+'        Call DeleteReference
+'
+'        ' UnRegister OCX from Addin folder
+'        Call UnRegisterFile(gsPath & gsOCXFilename)
+'*************************************************************************************************************************************
 
         ''' Kill gsPath & gsOCXFilename (It won't work because the OCX is open by Excel!?)
 

@@ -169,7 +169,7 @@ End Function
 Public Function FileLastModified(sFileName As String) As String
     Dim fs As Object
     Dim f As Object
-    Dim S As String
+    Dim s As String
 
     Set fs = CreateObject("Scripting.FileSystemObject")
 

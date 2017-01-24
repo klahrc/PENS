@@ -11,7 +11,7 @@ Option Explicit
 ' Module Constant Declarations Follow
 '---------------------------------------------------------------------------------------
 
-Private Const adCmdText As Integer = 1                     ' Required for early binding
+Private Const adCmdText As Integer = 1        ' Required for early binding
 Private Const pos As Integer = 1
 Private Const NEG As Integer = 2
 
@@ -25,7 +25,7 @@ Sub CondFormat(r As Range)
 
     With r
         Set cs = .FormatConditions.AddColorScale(colorscaletype:=3)
-        .FormatConditions(.FormatConditions.Count).SetFirstPriority ' Take priority over any other formats
+        .FormatConditions(.FormatConditions.Count).SetFirstPriority        ' Take priority over any other formats
 
         ' Set the color of the lowest value, with a range up to the next scale criteria. The color should be white.
         With cs.ColorScaleCriteria(1)
@@ -65,7 +65,7 @@ End Sub
 ' Method : GenPT_PS
 ' Author : cklahr
 ' Date   :
-' Purpose: Generates Portfolio Seasonality
+' Purpose: Generates Portfolio Seasonality Pivot
 '---------------------------------------------------------------------------------------
 Function GenPT_PS(ByVal wbNew As Workbook, ByVal PC As PivotCache) As Double
     Dim wsPT As Worksheet
@@ -74,8 +74,12 @@ Function GenPT_PS(ByVal wbNew As Workbook, ByVal PC As PivotCache) As Double
     Dim cs As ColorScale
     Dim dGrandTotal As Double
     Dim i As Integer
+    Dim PI As PivotItem
 
     Const sSOURCE As String = "GenPT_PS"
+
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
 
     'wbNew is the D4A workbook...
     Set wsPT = wbNew.Sheets.Add
@@ -85,8 +89,10 @@ Function GenPT_PS(ByVal wbNew As Workbook, ByVal PC As PivotCache) As Double
     Set PT = PC.CreatePivotTable(TableDestination:=wbNew.ActiveSheet.Name & "!R1c1", TableName:=wbNew.ActiveSheet.Name, DefaultVersion:=xlPivotTableVersion12)
 
 
+    PT.HasAutoFormat = False
+
     PT.PivotFields("Cat").Orientation = xlRowField
-    PT.PivotFields("Cat").Subtotals(1) = False             ' 1 = Automatic
+    PT.PivotFields("Cat").Subtotals(1) = False        ' 1 = Automatic
 
 
     ' Remove Cat = "0"
@@ -113,31 +119,40 @@ Function GenPT_PS(ByVal wbNew As Workbook, ByVal PC As PivotCache) As Double
     PT.AddDataField PT.PivotFields("NOV"), " NOV", xlSum
     PT.AddDataField PT.PivotFields("DEC"), " DEC", xlSum
 
+    PT.CalculatedFields.Add Name:="Total", Formula:="= JAN + FEB + MAR + APR + MAY + JUN + JUL + AUG + SEP + OCT + NOV + DEC"
+    PT.AddDataField PT.PivotFields("Total"), " Total", xlSum
+
     PT.PivotFields("Roles").Orientation = xlPageField
     PT.PivotFields("Roles").ClearAllFilters
     PT.PivotFields("Roles").CurrentPage = "Total Plan"
 
+
     PT.PivotFields("Project Priority").Orientation = xlPageField
     PT.PivotFields("Project Priority").ClearAllFilters
-    PT.PivotFields("Project Priority").CurrentPage = "1 - High"
+    For Each PI In PT.PivotFields("Project Priority").PivotItems
+        PI.Visible = (PI.Name = "1 - High" Or PI.Name = "2 - Medium")
+    Next
+    PT.PivotFields("Project Priority").EnableMultiplePageItems = True
 
+
+    On Error Resume Next        'In case there is no "0" or "(blank)"
     PT.PivotFields("Do not remove1").Orientation = xlPageField
     PT.PivotFields("Do not remove1").ClearAllFilters
     PT.PivotFields("Do not remove1").PivotItems("0").Visible = False
     PT.PivotFields("Do not remove1").PivotItems("(blank)").Visible = False
 
-    PT.DataBodyRange.NumberFormat = "#,###"                '
+    PT.DataBodyRange.NumberFormat = "#,###"        '
     PT.DataLabelRange.HorizontalAlignment = xlRight
 
-    PT.DataPivotField.Value = ""                           'Remove the word  from value column
+    PT.DataPivotField.Value = ""        'Remove the word  from value column
     If gbFY17 Then
-        PT.CompactLayoutRowHeader = "Total Plan 2017"      ' Changes the default 
+        PT.CompactLayoutRowHeader = "Total Plan 2017"        ' Changes the default 
     Else
-        PT.CompactLayoutRowHeader = "Total Plan 2016"      ' Changes the default 
+        PT.CompactLayoutRowHeader = "Total Plan 2016"        ' Changes the default 
     End If
 
-    wsPT.Range("M1:M2").Merge
-    With wsPT.Range("M1")
+    wsPT.Range("N1:N2").Merge
+    With wsPT.Range("N1")
         If gbFY17 Then
             .Value = 2017
         Else
@@ -149,12 +164,11 @@ Function GenPT_PS(ByVal wbNew As Workbook, ByVal PC As PivotCache) As Double
         .Font.Color = vbYellow
     End With
 
-
-    Set r = wsPT.Range(wsPT.Cells(5, 1), wsPT.Cells(PT.RowRange.Count + 2, 13))
+    Set r = wsPT.Range(wsPT.Cells(7, 2), wsPT.Cells(PT.RowRange.Count + 4, 13))
 
     With r
         Set cs = .FormatConditions.AddColorScale(colorscaletype:=3)
-        .FormatConditions(.FormatConditions.Count).SetFirstPriority ' Take priority over any other formats
+        .FormatConditions(.FormatConditions.Count).SetFirstPriority        ' Take priority over any other formats
 
         ' Set the color of the lowest value, with a range up to the next scale criteria. The color should be white.
         With cs.ColorScaleCriteria(1)
@@ -188,18 +202,434 @@ Function GenPT_PS(ByVal wbNew As Workbook, ByVal PC As PivotCache) As Double
         End With
     End With
 
-    wsPT.Range("B:M").ColumnWidth = 11
     wsPT.Range("$A6").HorizontalAlignment = xlCenter
 
     PT.DataBodyRange.Font.Color = RGB(255, 220, 100)
 
+    wsPT.Range("A:A").ColumnWidth = 44
+    wsPT.Range("B:M").ColumnWidth = 10.5
+    wsPT.Range("N:N").ColumnWidth = 13.5
+
     dGrandTotal = 0
     For i = 2 To 13
-        dGrandTotal = dGrandTotal + wsPT.Cells(PT.RowRange.Count + 3, i)
+        dGrandTotal = dGrandTotal + wsPT.Cells(PT.RowRange.Count + 5, i)
     Next
 
-    wsPT.Name = "Plan Seasonality"
+
+    ' Format Total Row
+    wsPT.Range(wsPT.Cells(PT.RowRange.Count + 5, 2), wsPT.Cells(PT.RowRange.Count + 5, 13)).Font.Color = vbBlack
+
+    ' Format Total Column
+    wsPT.Range(wsPT.Cells(7, 14), wsPT.Cells(PT.RowRange.Count + 5, 14)).Font.Color = vbBlack
+    PT.PivotFields(" Total").NumberFormat = "$#,###"
+
+    With wsPT
+        .PageSetup.Orientation = xlLandscape
+        .PageSetup.PrintArea = "$A$1:$N$" + CStr(PT.RowRange.Count + 5)
+        .PageSetup.Zoom = False
+        .PageSetup.FitToPagesWide = 1
+        .PageSetup.FitToPagesTall = False
+
+        .Name = "Plan Seasonality"
+    End With
+
     GenPT_PS = dGrandTotal
+
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+
+ErrorExit:
+    ' Clean up
+    Exit Function
+
+ErrorHandler:
+    If bCentralErrorHandler(msMODULE, sSOURCE) Then
+        Stop
+        Resume
+    Else
+        Resume ErrorExit
+    End If
+End Function
+
+'---------------------------------------------------------------------------------------
+' Method : GenPT_CS
+' Author : cklahr
+' Date   :
+' Purpose: Generates Portfolio Seasonality Pivot
+'---------------------------------------------------------------------------------------
+Function GenPT_CS(ByVal wbNew As Workbook, ByVal PC As PivotCache) As Double
+    Dim wsPT As Worksheet
+    Dim PT As PivotTable
+    Dim r As Range
+    Dim cs As ColorScale
+    Dim dGrandTotal As Double
+    Dim i As Integer
+    Dim PI As PivotItem
+
+    Const sSOURCE As String = "GenPT_PS"
+
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+
+    'wbNew is the D4A workbook...
+    Set wsPT = wbNew.Sheets.Add
+
+    wbNew.Windows(1).DisplayGridlines = False
+
+    Set PT = PC.CreatePivotTable(TableDestination:=wbNew.ActiveSheet.Name & "!R1c1", TableName:=wbNew.ActiveSheet.Name, DefaultVersion:=xlPivotTableVersion12)
+
+    PT.HasAutoFormat = False
+
+    On Error Resume Next        'In case there is no "Plan - Consulting" or "Plan - HP Contractor"
+    PT.PivotFields("Roles").Orientation = xlRowField
+    PT.PivotFields("Roles").Subtotals(1) = False        ' 1 = Automatic
+    PT.PivotFields("Roles").ClearAllFilters
+    For Each PI In PT.PivotFields("Roles").PivotItems
+        PI.Visible = (PI.Name = "Plan - Consulting" Or PI.Name = "Plan - HP Contractor")
+    Next
+    PT.PivotFields("Roles").EnableMultiplePageItems = True
+
+
+
+    ' Remove Cat = "0"
+    ' Dim pi As PivotItem
+    ' For Each pi In PT.PivotFields("Cat").PivotItems
+    '     If pi.Name = "0" Then pi.Visible = False
+    ' Next
+
+
+    PT.PivotFields("Project Name").Orientation = xlRowField
+    PT.PivotFields("Project Name").Subtotals(1) = False
+    PT.PivotFields("Project Name").AutoSort Order:=xlDescending, Field:="Program"
+
+    PT.AddDataField PT.PivotFields("JAN"), " JAN", xlSum
+    PT.AddDataField PT.PivotFields("FEB"), " FEB", xlSum
+    PT.AddDataField PT.PivotFields("MAR"), " MAR", xlSum
+    PT.AddDataField PT.PivotFields("APR"), " APR", xlSum
+    PT.AddDataField PT.PivotFields("MAY"), " MAY", xlSum
+    PT.AddDataField PT.PivotFields("JUN"), " JUN", xlSum
+    PT.AddDataField PT.PivotFields("JUL"), " JUL", xlSum
+    PT.AddDataField PT.PivotFields("AUG"), " AUG", xlSum
+    PT.AddDataField PT.PivotFields("SEP"), " SEP", xlSum
+    PT.AddDataField PT.PivotFields("OCT"), " OCT", xlSum
+    PT.AddDataField PT.PivotFields("NOV"), " NOV", xlSum
+    PT.AddDataField PT.PivotFields("DEC"), " DEC", xlSum
+
+    PT.CalculatedFields.Add Name:="Total", Formula:="= JAN + FEB + MAR + APR + MAY + JUN + JUL + AUG + SEP + OCT + NOV + DEC"
+    PT.AddDataField PT.PivotFields("Total"), " Total", xlSum
+
+    '    PT.PivotFields("Roles").Orientation = xlPageField
+    '    PT.PivotFields("Roles").ClearAllFilters
+    '    PT.PivotFields("Roles").CurrentPage = "Total Plan"
+
+
+    PT.PivotFields("Project Priority").Orientation = xlPageField
+    PT.PivotFields("Project Priority").ClearAllFilters
+    For Each PI In PT.PivotFields("Project Priority").PivotItems
+        PI.Visible = (PI.Name = "1 - High" Or PI.Name = "2 - Medium")
+    Next
+    PT.PivotFields("Project Priority").EnableMultiplePageItems = True
+
+
+    On Error Resume Next        'In case there is no "0", "(blank), OR "2017 TOTAL"
+    PT.PivotFields("Do not remove1").Orientation = xlPageField
+    PT.PivotFields("Do not remove1").ClearAllFilters
+    PT.PivotFields("Do not remove1").PivotItems("0").Visible = False
+    PT.PivotFields("Do not remove1").PivotItems("(blank)").Visible = False
+    PT.PivotFields("Do not remove1").PivotItems("2017 TOTAL").Visible = False
+
+
+    PT.DataBodyRange.NumberFormat = "#,###"        '
+    PT.DataLabelRange.HorizontalAlignment = xlRight
+
+    PT.DataPivotField.Value = ""        'Remove the word  from value column
+    If gbFY17 Then
+        PT.CompactLayoutRowHeader = "Consulting 2017"        ' Changes the default 
+    Else
+        PT.CompactLayoutRowHeader = "Consulting 2016"        ' Changes the default 
+    End If
+
+    wsPT.Range("N1:N2").Merge
+    With wsPT.Range("N1")
+        If gbFY17 Then
+            .Value = 2017
+        Else
+            .Value = 2016
+        End If
+        .HorizontalAlignment = xlCenter
+        .VerticalAlignment = xlCenter
+        .Interior.Color = RGB(79, 98, 40)
+        .Font.Color = vbYellow
+    End With
+
+    Set r = wsPT.Range(wsPT.Cells(7, 2), wsPT.Cells(PT.RowRange.Count + 3, 13))
+
+    With r
+        Set cs = .FormatConditions.AddColorScale(colorscaletype:=3)
+        .FormatConditions(.FormatConditions.Count).SetFirstPriority        ' Take priority over any other formats
+
+        ' Set the color of the lowest value, with a range up to the next scale criteria. The color should be white.
+        With cs.ColorScaleCriteria(1)
+            '''''''''''.Type = xlConditionValueLowestValue
+            .Type = xlConditionValueNumber
+            .Value = 0
+            With .FormatColor
+                .Color = RGB(255, 255, 255)
+                .TintAndShade = 0
+            End With
+        End With
+
+        ' At the 50th percentile, the color should be orange/green.
+        ' Note that you can't set the Value property for all values of Type.
+        With cs.ColorScaleCriteria(2)
+            .Type = xlConditionValuePercentile
+            .Value = 50
+            With .FormatColor
+                .Color = RGB(255, 243, 183)
+                .TintAndShade = 0
+            End With
+        End With
+
+        ' At the highest value, the color should be orange.
+        With cs.ColorScaleCriteria(3)
+            .Type = xlConditionValueHighestValue
+            With .FormatColor
+                .Color = RGB(255, 192, 0)
+                .TintAndShade = 0
+            End With
+        End With
+    End With
+
+    wsPT.Range("$A5").HorizontalAlignment = xlCenter
+
+    '''PT.DataBodyRange.Font.Color = RGB(255, 220, 100)
+
+    wsPT.Range("A:A").ColumnWidth = 44
+    wsPT.Range("B:M").ColumnWidth = 10.5
+    wsPT.Range("N:N").ColumnWidth = 13.5
+
+    dGrandTotal = 0
+    For i = 2 To 13
+        dGrandTotal = dGrandTotal + wsPT.Cells(PT.RowRange.Count + 5, i)
+    Next
+
+
+    ' Format Total Row
+    '''wsPT.Range(wsPT.Cells(PT.RowRange.Count + 4, 2), wsPT.Cells(PT.RowRange.Count + 4, 13)).Font.Color = vbBlack
+
+    ' Format Total Column
+    ''''wsPT.Range(wsPT.Cells(7, 14), wsPT.Cells(PT.RowRange.Count + 5, 14)).Font.Color = vbBlack
+    PT.PivotFields(" Total").NumberFormat = "$#,###"
+
+    With wsPT
+        .PageSetup.Orientation = xlLandscape
+        .PageSetup.PrintArea = "$A$1:$N$" + CStr(PT.RowRange.Count + 5)
+        .PageSetup.Zoom = False
+        .PageSetup.FitToPagesWide = 1
+        .PageSetup.FitToPagesTall = False
+
+        .Name = "Consulting Seasonality"
+    End With
+
+    Application.ScreenUpdating = True
+    Application.Calculation = xlCalculationAutomatic
+
+    GenPT_CS = dGrandTotal
+
+ErrorExit:
+    ' Clean up
+    Exit Function
+
+ErrorHandler:
+    If bCentralErrorHandler(msMODULE, sSOURCE) Then
+        Stop
+        Resume
+    Else
+        Resume ErrorExit
+    End If
+End Function
+
+'---------------------------------------------------------------------------------------
+' Method : GenPT_IGLS
+' Author : cklahr
+' Date   :
+' Purpose: Generates Portfolio Seasonality Pivot
+'---------------------------------------------------------------------------------------
+Function GenPT_IGLS(ByVal wbNew As Workbook, ByVal PC As PivotCache) As Double
+    Dim wsPT As Worksheet
+    Dim PT As PivotTable
+    Dim r As Range
+    Dim cs As ColorScale
+    Dim dGrandTotal As Double
+    Dim i As Integer
+    Dim PI As PivotItem
+
+    Const sSOURCE As String = "GenPT_PS"
+
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+
+    'wbNew is the D4A workbook...
+    Set wsPT = wbNew.Sheets.Add
+
+    wbNew.Windows(1).DisplayGridlines = False
+
+    Set PT = PC.CreatePivotTable(TableDestination:=wbNew.ActiveSheet.Name & "!R1c1", TableName:=wbNew.ActiveSheet.Name, DefaultVersion:=xlPivotTableVersion12)
+
+
+    PT.HasAutoFormat = False
+
+    '    PT.PivotFields("Cat").Orientation = xlRowField
+    '    PT.PivotFields("Cat").Subtotals(1) = False        ' 1 = Automatic
+
+
+    ' Remove Cat = "0"
+    ' Dim pi As PivotItem
+    ' For Each pi In PT.PivotFields("Cat").PivotItems
+    '     If pi.Name = "0" Then pi.Visible = False
+    ' Next
+
+
+    PT.PivotFields("Project Name").Orientation = xlRowField
+    PT.PivotFields("Project Name").Subtotals(1) = False
+    PT.PivotFields("Project Name").AutoSort Order:=xlDescending, Field:="Program"
+
+    PT.AddDataField PT.PivotFields("JAN"), " JAN", xlSum
+    PT.AddDataField PT.PivotFields("FEB"), " FEB", xlSum
+    PT.AddDataField PT.PivotFields("MAR"), " MAR", xlSum
+    PT.AddDataField PT.PivotFields("APR"), " APR", xlSum
+    PT.AddDataField PT.PivotFields("MAY"), " MAY", xlSum
+    PT.AddDataField PT.PivotFields("JUN"), " JUN", xlSum
+    PT.AddDataField PT.PivotFields("JUL"), " JUL", xlSum
+    PT.AddDataField PT.PivotFields("AUG"), " AUG", xlSum
+    PT.AddDataField PT.PivotFields("SEP"), " SEP", xlSum
+    PT.AddDataField PT.PivotFields("OCT"), " OCT", xlSum
+    PT.AddDataField PT.PivotFields("NOV"), " NOV", xlSum
+    PT.AddDataField PT.PivotFields("DEC"), " DEC", xlSum
+    PT.AddDataField PT.PivotFields("Do not remove1"), " Total", xlSum
+
+    '    PT.CalculatedFields.Add Name:="Total", Formula:="= JAN + FEB + MAR + APR + MAY + JUN + JUL + AUG + SEP + OCT + NOV + DEC"
+    '    PT.AddDataField PT.PivotFields("Total"), " Total", xlSum
+
+    PT.PivotFields("Roles").Orientation = xlPageField
+    PT.PivotFields("Roles").ClearAllFilters
+    ''''PT.PivotFields("Roles").CurrentPage = "Total Plan"
+    For Each PI In PT.PivotFields("Roles").PivotItems
+        PI.Visible = (Left(PI.Name, 3) = "IG " Or PI.Name = "SES")
+    Next
+    PT.PivotFields("Roles").EnableMultiplePageItems = True
+
+
+    PT.PivotFields("Project Priority").Orientation = xlPageField
+    PT.PivotFields("Project Priority").ClearAllFilters
+    For Each PI In PT.PivotFields("Project Priority").PivotItems
+        PI.Visible = (PI.Name = "1 - High" Or PI.Name = "2 - Medium")
+    Next
+    PT.PivotFields("Project Priority").EnableMultiplePageItems = True
+
+
+    On Error Resume Next        'In case there is no "0" or "(blank)"
+    PT.PivotFields("Do not remove1").Orientation = xlPageField
+    PT.PivotFields("Do not remove1").ClearAllFilters
+    PT.PivotFields("Do not remove1").PivotItems("0").Visible = False
+    PT.PivotFields("Do not remove1").PivotItems("(blank)").Visible = False
+
+    PT.DataBodyRange.NumberFormat = "0.0"        '
+    PT.DataLabelRange.HorizontalAlignment = xlRight
+
+    PT.DataPivotField.Value = ""        'Remove the word  from value column
+    If gbFY17 Then
+        PT.CompactLayoutRowHeader = "External Labour 2017"        ' Changes the default 
+    Else
+        PT.CompactLayoutRowHeader = "External Labour  2016"        ' Changes the default 
+    End If
+
+    wsPT.Range("N1:N2").Merge
+    With wsPT.Range("N1")
+        If gbFY17 Then
+            .Value = 2017
+        Else
+            .Value = 2016
+        End If
+        .HorizontalAlignment = xlCenter
+        .VerticalAlignment = xlCenter
+        .Interior.Color = RGB(79, 98, 40)
+        .Font.Color = vbYellow
+    End With
+
+    Set r = wsPT.Range(wsPT.Cells(7, 2), wsPT.Cells(PT.RowRange.Count + 4, 13))
+
+    With r
+        Set cs = .FormatConditions.AddColorScale(colorscaletype:=3)
+        .FormatConditions(.FormatConditions.Count).SetFirstPriority        ' Take priority over any other formats
+
+        ' Set the color of the lowest value, with a range up to the next scale criteria. The color should be white.
+        With cs.ColorScaleCriteria(1)
+            '''''''''''.Type = xlConditionValueLowestValue
+            .Type = xlConditionValueNumber
+            .Value = 0
+            With .FormatColor
+                .Color = RGB(255, 255, 255)
+                .TintAndShade = 0
+            End With
+        End With
+
+        ' At the 50th percentile, the color should be orange/green.
+        ' Note that you can't set the Value property for all values of Type.
+        With cs.ColorScaleCriteria(2)
+            .Type = xlConditionValuePercentile
+            .Value = 50
+            With .FormatColor
+                .Color = RGB(255, 243, 183)
+                .TintAndShade = 0
+            End With
+        End With
+
+        ' At the highest value, the color should be orange.
+        With cs.ColorScaleCriteria(3)
+            .Type = xlConditionValueHighestValue
+            With .FormatColor
+                .Color = RGB(255, 192, 0)
+                .TintAndShade = 0
+            End With
+        End With
+    End With
+
+    wsPT.Range("$A6").HorizontalAlignment = xlCenter
+
+    'PT.DataBodyRange.Font.Color = RGB(255, 220, 100)
+
+    wsPT.Range("A:A").ColumnWidth = 44
+    wsPT.Range("B:M").ColumnWidth = 10.5
+    wsPT.Range("N:N").ColumnWidth = 13.5
+
+    dGrandTotal = 0
+    For i = 2 To 13
+        dGrandTotal = dGrandTotal + wsPT.Cells(PT.RowRange.Count + 5, i)
+    Next
+
+
+    ' Format Total Row
+    '''wsPT.Range(wsPT.Cells(PT.RowRange.Count + 5, 2), wsPT.Cells(PT.RowRange.Count + 5, 13)).Font.Color = vbBlack
+
+    ' Format Total Column
+    '''wsPT.Range(wsPT.Cells(7, 14), wsPT.Cells(PT.RowRange.Count + 5, 14)).Font.Color = vbBlack
+    PT.PivotFields(" Total").NumberFormat = "$#,###"
+
+    With wsPT
+        .PageSetup.Orientation = xlLandscape
+        .PageSetup.PrintArea = "$A$1:$N$" + CStr(PT.RowRange.Count + 5)
+        .PageSetup.Zoom = False
+        .PageSetup.FitToPagesWide = 1
+        .PageSetup.FitToPagesTall = False
+
+        .Name = "IG Labour Seasonality"
+    End With
+
+    GenPT_IGLS = dGrandTotal
+
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
 
 ErrorExit:
     ' Clean up
@@ -230,6 +660,9 @@ Function GenPT_FTE_NE(ByVal wbNew As Workbook, ByVal PC As PivotCache) As Double
 
     Const sSOURCE As String = "GenPT_FTE_NE"
 
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+
     'wbNew is the D4A workbook...
     Set wsPT = wbNew.Sheets.Add
 
@@ -239,7 +672,7 @@ Function GenPT_FTE_NE(ByVal wbNew As Workbook, ByVal PC As PivotCache) As Double
 
 
     PT.PivotFields("Cat").Orientation = xlRowField
-    PT.PivotFields("Cat").Subtotals(1) = False             ' 1 = Automatic
+    PT.PivotFields("Cat").Subtotals(1) = False        ' 1 = Automatic
 
 
     ' Remove Cat = "0"
@@ -270,8 +703,11 @@ Function GenPT_FTE_NE(ByVal wbNew As Workbook, ByVal PC As PivotCache) As Double
     PT.PivotFields("Roles").ClearAllFilters
     PT.PivotFields("Roles").CurrentPage = "FTE NE - MI"
 
-    PT.DataBodyRange.NumberFormat = "###.#"                '
+    PT.DataBodyRange.NumberFormat = "###.#"        '
     PT.DataLabelRange.HorizontalAlignment = xlRight
+
+    PT.DataPivotField.Value = ""
+    PT.CompactLayoutRowHeader = "Category / Program"
 
     wsPT.Range("M1:M2").Merge
     With wsPT.Range("M1")
@@ -291,7 +727,7 @@ Function GenPT_FTE_NE(ByVal wbNew As Workbook, ByVal PC As PivotCache) As Double
 
     With r
         Set cs = .FormatConditions.AddColorScale(colorscaletype:=3)
-        .FormatConditions(.FormatConditions.Count).SetFirstPriority ' Take priority over any other formats
+        .FormatConditions(.FormatConditions.Count).SetFirstPriority        ' Take priority over any other formats
 
         ' Set the color of the lowest value, with a range up to the next scale criteria. The color should be white.
         With cs.ColorScaleCriteria(1)
@@ -325,6 +761,7 @@ Function GenPT_FTE_NE(ByVal wbNew As Workbook, ByVal PC As PivotCache) As Double
         End With
     End With
 
+    wsPT.Range("A:A").ColumnWidth = 50
     wsPT.Range("B:M").ColumnWidth = 5
 
     dGrandTotal = 0
@@ -332,8 +769,20 @@ Function GenPT_FTE_NE(ByVal wbNew As Workbook, ByVal PC As PivotCache) As Double
         dGrandTotal = dGrandTotal + wsPT.Cells(PT.RowRange.Count + 3, i)
     Next
 
-    wsPT.Name = "FTE NE"
+
+    With wsPT
+        .PageSetup.Orientation = xlLandscape
+        .PageSetup.PrintArea = "$A$1:$M$" + CStr(PT.RowRange.Count + 3)
+        .PageSetup.Zoom = False
+        .PageSetup.FitToPagesWide = 1
+        .PageSetup.FitToPagesTall = False
+
+        .Name = "FTE NE"
+    End With
     GenPT_FTE_NE = dGrandTotal
+
+    Application.ScreenUpdating = True
+    Application.Calculation = xlCalculationAutomatic
 
 ErrorExit:
     ' Clean up
@@ -365,6 +814,9 @@ Function GenPT_PROJ_SUMMARY(ByVal wbNew As Workbook, ByVal PC As PivotCache) As 
 
     Const sSOURCE As String = "GenPT_PROJ_SUMMARY"
 
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+
     'wbNew is the D4A workbook...
     Set wsPT = wbNew.Sheets.Add
     wbNew.Windows(1).DisplayGridlines = False
@@ -372,7 +824,7 @@ Function GenPT_PROJ_SUMMARY(ByVal wbNew As Workbook, ByVal PC As PivotCache) As 
     Set PT = PC.CreatePivotTable(TableDestination:=ActiveSheet.Name & "!R1c1", TableName:=ActiveSheet.Name, DefaultVersion:=xlPivotTableVersion12)
 
     PT.PivotFields("Cat").Orientation = xlRowField
-    PT.PivotFields("Cat").Subtotals(1) = False             ' 1 = Automatic
+    PT.PivotFields("Cat").Subtotals(1) = False        ' 1 = Automatic
 
 
     ' Remove Cat = "0"
@@ -403,8 +855,11 @@ Function GenPT_PROJ_SUMMARY(ByVal wbNew As Workbook, ByVal PC As PivotCache) As 
     PT.PivotFields("Roles").ClearAllFilters
     PT.PivotFields("Roles").CurrentPage = "FTE NE - MI"
 
-    PT.DataBodyRange.NumberFormat = "###.#"                '
+    PT.DataBodyRange.NumberFormat = "###.#"        '
     PT.DataLabelRange.HorizontalAlignment = xlRight
+
+    PT.DataPivotField.Value = ""
+    PT.CompactLayoutRowHeader = "Category / Project"
 
     wsPT.Range("M1:M2").Merge
     With wsPT.Range("M1")
@@ -427,7 +882,7 @@ Function GenPT_PROJ_SUMMARY(ByVal wbNew As Workbook, ByVal PC As PivotCache) As 
 
     With r
         Set cs = .FormatConditions.AddColorScale(colorscaletype:=3)
-        .FormatConditions(.FormatConditions.Count).SetFirstPriority ' Take priority over any other formats
+        .FormatConditions(.FormatConditions.Count).SetFirstPriority        ' Take priority over any other formats
 
         ' Set the color of the lowest value, with a range up to the next scale criteria. The color should be white.
         With cs.ColorScaleCriteria(1)
@@ -463,6 +918,7 @@ Function GenPT_PROJ_SUMMARY(ByVal wbNew As Workbook, ByVal PC As PivotCache) As 
         End With
     End With
 
+    wsPT.Range("A:A").ColumnWidth = 50
     wsPT.Range("B:M").ColumnWidth = 5
 
     dGrandTotal = 0
@@ -470,10 +926,21 @@ Function GenPT_PROJ_SUMMARY(ByVal wbNew As Workbook, ByVal PC As PivotCache) As 
         dGrandTotal = dGrandTotal + wsPT.Cells(PT.RowRange.Count + 3, i)
     Next
 
-    wsPT.Name = "Proj Summary"
+    With wsPT
+        .PageSetup.Orientation = xlLandscape
+        .PageSetup.PrintArea = "$A$1:$M$" + CStr(PT.RowRange.Count + 3)
+        .PageSetup.Zoom = False
+        .PageSetup.FitToPagesWide = 1
+        .PageSetup.FitToPagesTall = False
+
+        .Name = "Proj Summary"
+    End With
 
 
     GenPT_PROJ_SUMMARY = dGrandTotal
+
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
 
 ErrorExit:
     ' Clean up
@@ -558,19 +1025,20 @@ Function GenPT_CC_CAPACITY(sRemFolderRS As String, sRemFileNameRS As String) As 
     Dim sRemData As String
     Dim sRepFilename As String
 
-    Dim pi As PivotItem
+    Dim PI As PivotItem
     Dim rngFindValue As Range
 
     Dim PC As PivotCache
 
 
-    Const lMAX_ROLES As Integer = 100                      'Max number of roles
+    Const lMAX_ROLES As Integer = 100        'Max number of roles
 
     Const sSOURCE As String = "GenPT_CC_CAPACITY"
 
 
 
-
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
 
 
     Dim sPPDB As String
@@ -604,14 +1072,14 @@ Function GenPT_CC_CAPACITY(sRemFolderRS As String, sRemFileNameRS As String) As 
 
 
 
-    sRemoteCCTable = "B3:N" + CStr(3 + lMAX_ROLES)         ' Find out size of the remote CC table
+    sRemoteCCTable = "B3:N" + CStr(3 + lMAX_ROLES)        ' Find out size of the remote CC table
 
     sRepFilename = "PENS_CAP_" + Format(Now(), "mmmddyyyy_hhmmss") + ".xlsm"
 
     ''''''''''''''''''' PATH??????
     Set wbNew = Workbooks.Add(gsLocal_Folder & "\" & "CCC.xltm")
 
-    Set wsPT = wbNew.Sheets("CC Capacity")                 'wbNew is derived from a template...the code is already in the CC Capacity sheet
+    Set wsPT = wbNew.Sheets("CC Capacity")        'wbNew is derived from a template...the code is already in the CC Capacity sheet
 
     ' Create a PivotTable cache and report.
     Set PC = wbNew.PivotCaches.Create(SourceType:=xlExternal)
@@ -623,10 +1091,10 @@ Function GenPT_CC_CAPACITY(sRemFolderRS As String, sRemFileNameRS As String) As 
     wbNew.Windows(1).DisplayGridlines = False
 
     'Data location and range to copy
-    sRemData = "='" + sRemFolderRS + "\[" + sRemFileNameRS + "]" + "CC Capacity'!" + sRemoteCCTable '<< change as required
+    sRemData = "='" + sRemFolderRS + "\[" + sRemFileNameRS + "]" + "CC Capacity'!" + sRemoteCCTable        '<< change as required
 
     'Get Data From Closed Book (link to worksheet)
-    With wsPT.Range(wsPT.Cells(3, 2), wsPT.Cells(3 + lMAX_ROLES, 14)) '<< change as required
+    With wsPT.Range(wsPT.Cells(3, 2), wsPT.Cells(3 + lMAX_ROLES, 14))        '<< change as required
         .Formula = sRemData
         'convert formula to text
         .Value = .Value
@@ -637,22 +1105,22 @@ Function GenPT_CC_CAPACITY(sRemFolderRS As String, sRemFileNameRS As String) As 
     ' Initialization
     '*************************************************************************************************************************************
     lT1x1 = 3
-    lT1x2 = lT1x1 + iRolesCount + 1                        ' Including Headers and Total Row
+    lT1x2 = lT1x1 + iRolesCount + 1        ' Including Headers and Total Row
     lT1y1 = 2
     lT1y2 = 14
 
     lT2x1 = 3
-    lT2x2 = lT2x1 + iRolesCount + 1                        ' Including Headers and Total Row
+    lT2x2 = lT2x1 + iRolesCount + 1        ' Including Headers and Total Row
     lT2y1 = 16
     lT2y2 = 28
 
-    lT3x1 = 3 + iRolesCount + 8                            ' Including Headers and Total Row
-    lT3x2 = lT3x1 + iRolesCount + 1                        ' Including Headers and Total Row
+    lT3x1 = 3 + iRolesCount + 8        ' Including Headers and Total Row
+    lT3x2 = lT3x1 + iRolesCount + 1        ' Including Headers and Total Row
     lT3y1 = 2
     lT3y2 = 14
 
-    lT4x1 = 3 + iRolesCount + 8                            ' Including Headers and Total Row
-    lT4x2 = lT4x1 + iRolesCount + 1                        ' Including Headers and Total Row
+    lT4x1 = 3 + iRolesCount + 8        ' Including Headers and Total Row
+    lT4x2 = lT4x1 + iRolesCount + 1        ' Including Headers and Total Row
     lT4y1 = 16
     lT4y2 = 28
 
@@ -683,14 +1151,14 @@ Function GenPT_CC_CAPACITY(sRemFolderRS As String, sRemFileNameRS As String) As 
     '    Debug.Print lT4y2
 
     With wsPT
-        .Range(.Cells(lT1x1, lT1y1), .Cells(lT1x2 - 1, lT1y2)).Sort Key1:=.Cells(lT1x1, lT1y1), Header:=xlYes 'Sort range by role!
-        .Range(.Cells(lT2x1, lT2y1), .Cells(lT2x2, lT2y2)) = .Range(.Cells(lT1x1, lT1y1), .Cells(lT1x2, lT1y2)).Value 'Copy T1 into T2
-        .Range(.Cells(lT1x1 + 1, lT1y1 + 1), .Cells(lT1x2, lT1y2)).Clear 'Clear T1 body only
-        .Range(.Cells(lT2x1, lT2y1), .Cells(lT2x2, lT2y2)) = .Range(.Cells(lT2x1, lT2y1), .Cells(lT2x2, lT2y2)).Value 'Copy / paste values from T2 into T2
-        .Range(.Cells(lT4x1, lT4y1), .Cells(lT4x2, lT4y2)) = .Range(.Cells(lT2x1, lT2y1), .Cells(lT2x2, lT2y2)).Value 'Copy T4 from T2
+        .Range(.Cells(lT1x1, lT1y1), .Cells(lT1x2 - 1, lT1y2)).Sort Key1:=.Cells(lT1x1, lT1y1), Header:=xlYes        'Sort range by role!
+        .Range(.Cells(lT2x1, lT2y1), .Cells(lT2x2, lT2y2)) = .Range(.Cells(lT1x1, lT1y1), .Cells(lT1x2, lT1y2)).Value        'Copy T1 into T2
+        .Range(.Cells(lT1x1 + 1, lT1y1 + 1), .Cells(lT1x2, lT1y2)).Clear        'Clear T1 body only
+        .Range(.Cells(lT2x1, lT2y1), .Cells(lT2x2, lT2y2)) = .Range(.Cells(lT2x1, lT2y1), .Cells(lT2x2, lT2y2)).Value        'Copy / paste values from T2 into T2
+        .Range(.Cells(lT4x1, lT4y1), .Cells(lT4x2, lT4y2)) = .Range(.Cells(lT2x1, lT2y1), .Cells(lT2x2, lT2y2)).Value        'Copy T4 from T2
 
-        .Range(.Cells(lT2x1 + 1, lT2y1 + 1), .Cells(lT2x2, lT2y2)).NumberFormat = "0%" ' Format T2 body only
-        .Range(.Cells(lT4x1 + 1, lT4y1 + 1), .Cells(lT4x2, lT4y2)).NumberFormat = "0.0" 'Format T4 body only
+        .Range(.Cells(lT2x1 + 1, lT2y1 + 1), .Cells(lT2x2, lT2y2)).NumberFormat = "0%"        ' Format T2 body only
+        .Range(.Cells(lT4x1 + 1, lT4y1 + 1), .Cells(lT4x2, lT4y2)).NumberFormat = "0.0"        'Format T4 body only
 
         'Adding formulas for T1 and T2 tables
         .Range(.Cells(lT1x1 + 1, lT1y1 + 1), .Cells(lT1x2, lT1y2)) = "=Q" + CStr(lT4x1 + 1) + "-C" + CStr(lT4x1 + 1)
@@ -701,15 +1169,15 @@ Function GenPT_CC_CAPACITY(sRemFolderRS As String, sRemFileNameRS As String) As 
 
     ' Adding Pivot Table
     '====================
-    Application.ScreenUpdating = False
-    Application.Calculation = xlCalculationManual
+    '    Application.ScreenUpdating = False
+    '    Application.Calculation = xlCalculationManual
 
     '''Set PT = PC.CreatePivotTable(TableDestination:=ActiveSheet.Cells(lT3x1 - 1, 2), TableName:=ActiveSheet.Name, DefaultVersion:=xlPivotTableVersion12)
 
     Set PT = PC.CreatePivotTable(TableDestination:=wsPT.Cells(lT3x1 - 1, 2), TableName:="CapVsDemPT", DefaultVersion:=xlPivotTableVersion12)
 
     PT.PivotFields("Roles").Orientation = xlRowField
-    PT.PivotFields("Roles").Subtotals(1) = False           ' 1 = Automatic
+    PT.PivotFields("Roles").Subtotals(1) = False        ' 1 = Automatic
 
     PT.PivotFields("Project Name").Orientation = xlRowField
     PT.PivotFields("Project Name").Subtotals(1) = False
@@ -733,8 +1201,8 @@ Function GenPT_CC_CAPACITY(sRemFolderRS As String, sRemFileNameRS As String) As 
 
 
     ''''PT.Name = "CapVsDemPT"
-    PT.DataPivotField.Value = ""                           'Remove the word  from value column
-    PT.CompactLayoutRowHeader = "Role"                     ' Changes the default 
+    PT.DataPivotField.Value = ""        'Remove the word  from value column
+    PT.CompactLayoutRowHeader = "Role"        ' Changes the default 
     PT.TableRange2.Font.Color = vbBlack
 
 
@@ -765,12 +1233,12 @@ Function GenPT_CC_CAPACITY(sRemFolderRS As String, sRemFileNameRS As String) As 
     PT.PivotFields("Roles").Subtotals(1) = True
 
     'Turning off items we do not want showing
-    For Each pi In PT.PivotFields("Roles").PivotItems
-        Set rngFindValue = wsPT.Range(wsPT.Cells(lT4x1, lT4y1), wsPT.Cells(lT4x2 - 1, lT4y1)).Find(What:=pi.Caption, after:=wsPT.Cells(lT4x1, lT4y1), LookIn:=xlValues, lookAt:=xlWhole, SearchOrder:=xlByRows, _
-        SearchDirection:=xlNext, MatchCase:=False, SearchFormat:=False)
+    For Each PI In PT.PivotFields("Roles").PivotItems
+        Set rngFindValue = wsPT.Range(wsPT.Cells(lT4x1, lT4y1), wsPT.Cells(lT4x2 - 1, lT4y1)).Find(What:=PI.Caption, after:=wsPT.Cells(lT4x1, lT4y1), LookIn:=xlValues, lookAt:=xlWhole, SearchOrder:=xlByRows, _
+                                                                                                   SearchDirection:=xlNext, MatchCase:=False, SearchFormat:=False)
 
         If rngFindValue Is Nothing Then
-            pi.Visible = False
+            PI.Visible = False
         End If
         '''''If pi.Caption <> "(blank)" Then pi.Visible = False
     Next
@@ -864,7 +1332,7 @@ Function GenPT_CC_CAPACITY(sRemFolderRS As String, sRemFileNameRS As String) As 
 
     ' Adding labels indicating the Year
     '==================================
-    With wsPT.Cells(lT1x1 - 1, 7)                          'G2
+    With wsPT.Cells(lT1x1 - 1, 7)        'G2
         If gbFY17 Then
             .Value = 2017
         Else
@@ -876,7 +1344,7 @@ Function GenPT_CC_CAPACITY(sRemFolderRS As String, sRemFileNameRS As String) As 
         .Font.Color = vbYellow
     End With
 
-    With wsPT.Cells(lT2x1 - 1, 21)                         'U2
+    With wsPT.Cells(lT2x1 - 1, 21)        'U2
         If gbFY17 Then
             .Value = 2017
         Else
@@ -900,7 +1368,7 @@ Function GenPT_CC_CAPACITY(sRemFolderRS As String, sRemFileNameRS As String) As 
         .Font.Color = vbYellow
     End With
 
-    With wsPT.Cells(lT4x1 - 3, 21)                         'U30
+    With wsPT.Cells(lT4x1 - 3, 21)        'U30
         If gbFY17 Then
             .Value = 2017
         Else
@@ -914,7 +1382,7 @@ Function GenPT_CC_CAPACITY(sRemFolderRS As String, sRemFileNameRS As String) As 
 
     wsPT.Copy after:=wsPT
     ActiveSheet.Name = "CCBKP"
-    ActiveSheet.Visible = xlSheetHidden                    ' or xlSheetVeryHidden
+    ActiveSheet.Visible = xlSheetHidden        ' or xlSheetVeryHidden
 
     wsPT.Activate
 
@@ -933,13 +1401,13 @@ Function GenPT_CC_CAPACITY(sRemFolderRS As String, sRemFileNameRS As String) As 
 
     ' Adding Name ranges for the Tables
     With wbNew.Sheets("CC Capacity")
-        wbNew.Names.Add Name:="Table1", RefersTo:=.Range(.Cells(lT1x1, lT1y1), .Cells(lT1x2, lT1y2)) '''' 
+        wbNew.Names.Add Name:="Table1", RefersTo:=.Range(.Cells(lT1x1, lT1y1), .Cells(lT1x2, lT1y2))        '''' 
         wbNew.Names.Add Name:="Table2", RefersTo:=.Range(.Cells(lT2x1, lT2y1), .Cells(lT2x2, lT2y2))
         wbNew.Names.Add Name:="Table4", RefersTo:=.Range(.Cells(lT4x1, lT4y1), .Cells(lT4x2, lT4y2))
     End With
 
-    With wbNew.Sheets("CCBKP")                             'Same tables in CCBKP
-        wbNew.Names.Add Name:="Table5", RefersTo:=.Range(.Cells(lT1x1, lT1y1), .Cells(lT1x2, lT1y2)) '''' 
+    With wbNew.Sheets("CCBKP")        'Same tables in CCBKP
+        wbNew.Names.Add Name:="Table5", RefersTo:=.Range(.Cells(lT1x1, lT1y1), .Cells(lT1x2, lT1y2))        '''' 
         wbNew.Names.Add Name:="Table6", RefersTo:=.Range(.Cells(lT2x1, lT2y1), .Cells(lT2x2, lT2y2))
         wbNew.Names.Add Name:="Table8", RefersTo:=.Range(.Cells(lT4x1, lT4y1), .Cells(lT4x2, lT4y2))
     End With
@@ -1007,14 +1475,17 @@ Function GenPT_NES(ByVal wbNew As Workbook, ByVal ws As Worksheet) As Long
 
     Const sSOURCE As String = "GenPT_NES"
 
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+
 
     'Determine the data range you want to pivot
     sData = ws.Name & "!" & Range("A1:AX10000").Address(ReferenceStyle:=xlR1C1)
 
     'Create Pivot Cache from Source Data
     Set PC = ActiveWorkbook.PivotCaches.Create( _
-    SourceType:=xlDatabase, _
-    SourceData:=sData)
+             SourceType:=xlDatabase, _
+             SourceData:=sData)
 
 
 
@@ -1034,18 +1505,18 @@ Function GenPT_NES(ByVal wbNew As Workbook, ByVal ws As Worksheet) As Long
 
 
     PT.PivotFields("LOB").Orientation = xlRowField
-    PT.PivotFields("LOB").Subtotals(1) = True              ' 1 = Automatic
+    PT.PivotFields("LOB").Subtotals(1) = True        ' 1 = Automatic
 
     If gbFY17 Then
         PT.PivotFields("Budget Category").Orientation = xlRowField
-        PT.PivotFields("Budget Category").Subtotals(1) = False ' 1 = Automatic
+        PT.PivotFields("Budget Category").Subtotals(1) = False        ' 1 = Automatic
     Else
         PT.PivotFields("Project Type").Orientation = xlRowField
-        PT.PivotFields("Project Type").Subtotals(1) = False ' 1 = Automatic
+        PT.PivotFields("Project Type").Subtotals(1) = False        ' 1 = Automatic
     End If
 
     PT.PivotFields("Project Name").Orientation = xlRowField
-    PT.PivotFields("Project Name").Subtotals(1) = False    ' 1 = Automatic
+    PT.PivotFields("Project Name").Subtotals(1) = False        ' 1 = Automatic
 
 
     PT.AddDataField PT.PivotFields("Budget"), " Budget", xlSum
@@ -1055,7 +1526,7 @@ Function GenPT_NES(ByVal wbNew As Workbook, ByVal ws As Worksheet) As Long
     PT.PivotFields(" DB NE").NumberFormat = "$#,##0"
 
     '''PT.AddDataField PT.PivotFields("Dashboard NE - Budget" + vbLf + "($)"), " DB NE - Budget" + vbLf + "($)", xlSum
-    PT.AddDataField PT.PivotFields(8), " DB NE - Budget" + vbLf + "($)", xlSum '8 is index for  + vbLf +  field (for some reason VBA doesn't like vbLf in the field name :-(
+    PT.AddDataField PT.PivotFields(8), " DB NE - Budget" + vbLf + "($)", xlSum        '8 is index for  + vbLf +  field (for some reason VBA doesn't like vbLf in the field name :-(
 
 
     ''' Dashboard NE - Budget($)
@@ -1083,7 +1554,7 @@ Function GenPT_NES(ByVal wbNew As Workbook, ByVal ws As Worksheet) As Long
 
 
     '''''''PT.AddDataField PT.PivotFields("Reporting NE - Budget" + vbLf + "($)"), " Rep NE - Budget" + vbLf + "($)", xlSum
-    PT.AddDataField PT.PivotFields(9), " Rep NE - Budget" + vbLf + "($)", xlSum '9 is index for  + vbLf +  field(for some reason VBA doesn't like vbLf in the field name :-(
+    PT.AddDataField PT.PivotFields(13), " Rep NE - Budget" + vbLf + "($)", xlSum        '9 is index for  + vbLf +  field(for some reason VBA doesn't like vbLf in the field name :-(
     PT.PivotFields(" Rep NE - Budget" + vbLf + "($)").NumberFormat = "$#,##0"
 
     PT.CalculatedFields.Add Name:="RNEvsBudget", Formula:="=IF(Budget = 0,0,(Reporting NE - Budget) / Budget)"
@@ -1165,6 +1636,9 @@ Function GenPT_NES(ByVal wbNew As Workbook, ByVal ws As Worksheet) As Long
 
     ActiveWindow.FreezePanes = True
 
+    Application.ScreenUpdating = True
+    Application.Calculation = xlCalculationAutomatic
+
     'wbNew is the D4A workbook...
     '''''Set wsPT = wbNew.Sheets.Add
     '''''wbNew.Windows(1).DisplayGridlines = False
@@ -1216,6 +1690,9 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
     Dim cmdCommand2 As Object
     Dim rstRecordset2 As Object
 
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+
 
     'Dim sD4AFileName As String
     '   Dim wbNew As Workbook
@@ -1236,7 +1713,7 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
     Dim sPPDB As String
     '''sPPDB = gwsConfig.Range(gsLOCAL_FOLDER).Value + "\" + gwsConfig.Range(gsDB_NAME).Value        'PDASH.accdb
 
-    sPPDB = gsLocal_Folder + "\" + gwsConfig.Range(gsDB_NAME).Value 'PDASH.accdb
+    sPPDB = gsLocal_Folder + "\" + gwsConfig.Range(gsDB_NAME).Value        'PDASH.accdb
 
 
     Dim cnConn As Object
@@ -1388,11 +1865,11 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
         .Range(.Cells(1, 1), .Cells(1, 50)).WrapText = True
         .Range(.Cells(1, 1), .Cells(1, 50)).HorizontalAlignment = xlCenter
         .Range(.Cells(1, 1), .Cells(1, 50)).VerticalAlignment = xlTop
-        .Range(.Cells(1, 1), .Cells(1, 50)).Interior.Color = RGB(80, 130, 190) 'RGB(238, 236, 225)
-        .Range(.Cells(1, 1), .Cells(1, 50)).Font.Color = vbWhite 'RGB(31, 73, 125)
+        .Range(.Cells(1, 1), .Cells(1, 50)).Interior.Color = RGB(80, 130, 190)        'RGB(238, 236, 225)
+        .Range(.Cells(1, 1), .Cells(1, 50)).Font.Color = vbWhite        'RGB(31, 73, 125)
 
-        Application.ScreenUpdating = False
-        Application.Calculation = xlCalculationManual
+        '        Application.ScreenUpdating = False
+        '        Application.Calculation = xlCalculationManual
 
         While Not rstRecordset.EOF
 
@@ -1409,12 +1886,12 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
                 .Cells(i, 3).Value = Trim(rstRecordset.Fields("Project Code"))
                 .Cells(i, 4).Value = Trim(rstRecordset.Fields("Project Name"))
                 If gbFY17 Then
-                    .Cells(i, 5).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - SW SAAS", "Project Code", rstRecordset.Fields("Project Code"))), "$#,##0") ' Budget
+                    .Cells(i, 5).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - SW SAAS", "Project Code", rstRecordset.Fields("Project Code"))), "$#,##0")        ' Budget
                 Else
-                    .Cells(i, 5).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - HW Amort", "Project Code", rstRecordset.Fields("Project Code"))), "$#,##0") ' Budget
+                    .Cells(i, 5).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - HW Amort", "Project Code", rstRecordset.Fields("Project Code"))), "$#,##0")        ' Budget
                 End If
-                .Cells(i, 6).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - HW < $5K", "Project Code", rstRecordset.Fields("Project Code"))), "$#,##0") ' Revised BL
-                .Cells(i, 7).Value = Format(FetchValue(cnConn, "Do not remove1", "Roles", "NE (Actual + Rem. Plan)", "Project Code", rstRecordset.Fields("Project Code")), "$#,##0") ' Dashboard NE
+                .Cells(i, 6).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - HW < $5K", "Project Code", rstRecordset.Fields("Project Code"))), "$#,##0")        ' Revised BL
+                .Cells(i, 7).Value = Format(FetchValue(cnConn, "Do not remove1", "Roles", "NE (Actual + Rem. Plan)", "Project Code", rstRecordset.Fields("Project Code")), "$#,##0")        ' Dashboard NE
 
                 ''.Cells(i, 8).Value = "=G" & i & "-E" & i
 
@@ -1438,7 +1915,7 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
                 .Cells(i, 11).NumberFormat = "0%"
 
 
-                .Cells(i, 12).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - HW Maint", "Project Code", rstRecordset.Fields("Project Code"))), "$#,##0") ' Reporting NE
+                .Cells(i, 12).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - HW Maint", "Project Code", rstRecordset.Fields("Project Code"))), "$#,##0")        ' Reporting NE
 
                 .Cells(i, 13) = "=IF((L" & i & "-E" & i & ")<>0,L" & i & "-E" & i & ","""")"
                 .Cells(i, 13).NumberFormat = "$#,##0"
@@ -1463,7 +1940,7 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
                 '.Cells(i, 13).NumberFormat = "$#,##0"
 
 
-                .Cells(i, 19).Value = Format(FetchValue(cnConn, "Names", "Roles", "Actual - Travel", "Project Code", rstRecordset.Fields("Project Code")), "$#,##0") 'YTD Actuals
+                .Cells(i, 19).Value = Format(FetchValue(cnConn, "Names", "Roles", "Actual - Travel", "Project Code", rstRecordset.Fields("Project Code")), "$#,##0")        'YTD Actuals
 
 
                 ' If Actuals greater than Reporting NE, then overwrite Reporting NE with Actuals and highlith in redish
@@ -1482,7 +1959,7 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
                 .Cells(i, 21) = "=IF(K" & i & "<>"""", IF(ABS(K" & i & ")<0.05,""Green"",IF(ABS(K" & i & ")<0.1,""Yellow"",""Red"")),""Green"")"
 
 
-                .Cells(i, 22).Value = Trim((FetchValue(cnConn, "Names", "Roles", "Actual - MI", "Project Code", rstRecordset.Fields("Project Code")))) ' Project Status
+                .Cells(i, 22).Value = Trim((FetchValue(cnConn, "Names", "Roles", "Actual - MI", "Project Code", rstRecordset.Fields("Project Code"))))        ' Project Status
 
                 .Cells(i, 23).Value = Trim(rstRecordset.Fields("Account Manager"))
                 .Cells(i, 24).Value = Trim(rstRecordset.Fields("Activation Status"))
@@ -1495,13 +1972,13 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
                 .Cells(i, 27).NumberFormat = "$#,##0"
                 .Cells(i, 28).Value = "=L" & i & "*AF" & i
                 .Cells(i, 28).NumberFormat = "$#,##0"
-                .Cells(i, 29).Value = Trim((FetchValue(cnConn, "Names", "Roles", "Plan - SES", "Project Code", rstRecordset.Fields("Project Code")))) ' MI %
+                .Cells(i, 29).Value = Trim((FetchValue(cnConn, "Names", "Roles", "Plan - SES", "Project Code", rstRecordset.Fields("Project Code"))))        ' MI %
                 .Cells(i, 29).NumberFormat = "0%"
-                .Cells(i, 30).Value = Trim((FetchValue(cnConn, "Names", "Roles", "Plan - SW Amort", "Project Code", rstRecordset.Fields("Project Code")))) ' IG %
+                .Cells(i, 30).Value = Trim((FetchValue(cnConn, "Names", "Roles", "Plan - SW Amort", "Project Code", rstRecordset.Fields("Project Code"))))        ' IG %
                 .Cells(i, 30).NumberFormat = "0%"
-                .Cells(i, 31).Value = Trim((FetchValue(cnConn, "Names", "Roles", "Plan - HW < $5K", "Project Code", rstRecordset.Fields("Project Code")))) ' IPC %
+                .Cells(i, 31).Value = Trim((FetchValue(cnConn, "Names", "Roles", "Plan - HW < $5K", "Project Code", rstRecordset.Fields("Project Code"))))        ' IPC %
                 .Cells(i, 31).NumberFormat = "0%"
-                .Cells(i, 32).Value = Trim((FetchValue(cnConn, "Names", "Roles", "Plan - Other", "Project Code", rstRecordset.Fields("Project Code")))) ' LC %
+                .Cells(i, 32).Value = Trim((FetchValue(cnConn, "Names", "Roles", "Plan - Other", "Project Code", rstRecordset.Fields("Project Code"))))        ' LC %
                 .Cells(i, 32).NumberFormat = "0%"
                 .Cells(i, 33).Value = Trim(rstRecordset.Fields("Publish NE"))
 
@@ -1516,7 +1993,7 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
                 With cmdCommand2
 
                     .CommandText = "SELECT [JAN], [FEB], [MAR], [APR], [MAY], [Jun], [Jul], [Aug], [Sep], [Oct], [Nov], [Dec] FROM tbl_PortfolioPlan WHERE [Roles] = " + _
-                    "'" + "FTE NE - MI" + "'" + " AND [Project Code] = " + "'" + rstRecordset.Fields("Project Code") + "'"
+                                   "'" + "FTE NE - MI" + "'" + " AND [Project Code] = " + "'" + rstRecordset.Fields("Project Code") + "'"
 
 
                     .CommandType = adCmdText
@@ -1627,14 +2104,14 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
                     .Cells(i, 45) = ""
                 End If
 
-                .Cells(i, 46).Value = Format(FetchValue(cnConn, "Do not remove1", "Roles", "FTE NE - MI", "Project Code", rstRecordset.Fields("Project Code")), "$#,##0") ' FTE NE - MI Total ($)
-                .Cells(i, 47).Value = Format(FetchValue(cnConn, "Do not remove2", "Roles", "Plan - MI", "Project Code", rstRecordset.Fields("Project Code")), "$#,##0") ' Budget - MI Total ($)
+                .Cells(i, 46).Value = Format(FetchValue(cnConn, "Do not remove1", "Roles", "FTE NE - MI", "Project Code", rstRecordset.Fields("Project Code")), "$#,##0")        ' FTE NE - MI Total ($)
+                .Cells(i, 47).Value = Format(FetchValue(cnConn, "Do not remove2", "Roles", "Plan - MI", "Project Code", rstRecordset.Fields("Project Code")), "$#,##0")        ' Budget - MI Total ($)
 
                 If Not gbFY17 Then
-                    .Cells(i, 48).Value = Format(FetchValue(cnConn, "MI Labor Cost - Revised BL", "Roles", "Actual - HW < $5K", "Project Code", rstRecordset.Fields("Project Code")), "$#,##0") ' MI Labor Cost - Revised BL($)
+                    .Cells(i, 48).Value = Format(FetchValue(cnConn, "MI Labor Cost - Revised BL", "Roles", "Actual - HW < $5K", "Project Code", rstRecordset.Fields("Project Code")), "$#,##0")        ' MI Labor Cost - Revised BL($)
                 End If
 
-                If .Cells(i, 48).Value = "" Then           ' If found no value in MI Labor Cost - Revised BL, then bring Budget - MI Total ($)
+                If .Cells(i, 48).Value = "" Then        ' If found no value in MI Labor Cost - Revised BL, then bring Budget - MI Total ($)
                     .Cells(i, 48).Value = Format(.Cells(i, 47).Value, "$#,##0")
                 Else
                     .Cells(i, 48).Font.Color = RGB(156, 0, 6)
@@ -1642,8 +2119,8 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
 
                 If Not gbFY17 Then
-                    .Cells(i, 49).Value = FetchValue(cnConn, "Report", "Roles", "'" + "Actual - MI" + "'", "Project Code", rstRecordset.Fields("Project Code")) ' Budget / CR Notes
-                    .Cells(i, 50).Value = FetchValue(cnConn, "NE Explanation", "Roles", "Actual - HW < $5K", "Project Code", rstRecordset.Fields("Project Code")) 'NE Explanation
+                    .Cells(i, 49).Value = FetchValue(cnConn, "Report", "Roles", "'" + "Actual - MI" + "'", "Project Code", rstRecordset.Fields("Project Code"))        ' Budget / CR Notes
+                    .Cells(i, 50).Value = FetchValue(cnConn, "NE Explanation", "Roles", "Actual - HW < $5K", "Project Code", rstRecordset.Fields("Project Code"))        'NE Explanation
                     .Cells(i, 50).Font.Color = vbBlue
                 End If
                 i = i + 1
@@ -1714,7 +2191,7 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
         ''.Range(.Cells(2, 16), .Cells(i - 1, 16)).HorizontalAlignment = xlCenter        ' Calculated
         ''.Range(.Cells(2, 17), .Cells(i - 1, 17)).HorizontalAlignment = xlCenter        ' Dashboard
-        .Range(.Cells(2, 34), .Cells(i - 1, 34)).HorizontalAlignment = xlCenter 'Publish (Y/N)
+        .Range(.Cells(2, 34), .Cells(i - 1, 34)).HorizontalAlignment = xlCenter        'Publish (Y/N)
 
 
 
@@ -1731,7 +2208,7 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
             With .FormatConditions(1)
                 .SetFirstPriority
-                .Interior.Color = RGB(255, 199, 206)       ' Redish
+                .Interior.Color = RGB(255, 199, 206)        ' Redish
                 .Font.Color = RGB(156, 0, 6)
             End With
 
@@ -1754,7 +2231,7 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
             End With
 
             With .FormatConditions(2)
-                .Interior.Color = RGB(255, 199, 206)       ' Redish
+                .Interior.Color = RGB(255, 199, 206)        ' Redish
                 .Font.Color = RGB(156, 0, 6)
             End With
 
@@ -1778,7 +2255,7 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
 
             With .FormatConditions(2)
-                .Interior.Color = RGB(255, 199, 206)       ' Redish
+                .Interior.Color = RGB(255, 199, 206)        ' Redish
                 .Font.Color = RGB(156, 0, 6)
             End With
 
@@ -1802,7 +2279,7 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
 
             With .FormatConditions(2)
-                .Interior.Color = RGB(255, 199, 206)       ' Redish
+                .Interior.Color = RGB(255, 199, 206)        ' Redish
                 .Font.Color = RGB(156, 0, 6)
             End With
 
@@ -1826,7 +2303,7 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
 
             With .FormatConditions(2)
-                .Interior.Color = RGB(255, 199, 206)       ' Redish
+                .Interior.Color = RGB(255, 199, 206)        ' Redish
                 .Font.Color = RGB(156, 0, 6)
             End With
 
@@ -1851,7 +2328,7 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
 
             With .FormatConditions(2)
-                .Interior.Color = RGB(255, 199, 206)       ' Redish
+                .Interior.Color = RGB(255, 199, 206)        ' Redish
                 .Font.Color = RGB(156, 0, 6)
             End With
 
@@ -1871,17 +2348,17 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
             With .FormatConditions(1)
                 .SetFirstPriority
-                .Interior.Color = RGB(255, 199, 206)       ' Redish
+                .Interior.Color = RGB(255, 199, 206)        ' Redish
                 .Font.Color = RGB(156, 0, 6)
             End With
 
             With .FormatConditions(2)
-                .Interior.Color = RGB(255, 235, 156)       ' Yellow-ish
+                .Interior.Color = RGB(255, 235, 156)        ' Yellow-ish
                 .Font.Color = RGB(156, 101, 0)
             End With
 
             With .FormatConditions(3)
-                .Interior.Color = RGB(198, 239, 206)       ' Green-ish
+                .Interior.Color = RGB(198, 239, 206)        ' Green-ish
                 .Font.Color = RGB(0, 97, 0)
             End With
 
@@ -1896,17 +2373,17 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
 
             With .FormatConditions(1)
                 .SetFirstPriority
-                .Interior.Color = RGB(255, 199, 206)       ' Redish
+                .Interior.Color = RGB(255, 199, 206)        ' Redish
                 .Font.Color = RGB(156, 0, 6)
             End With
 
             With .FormatConditions(2)
-                .Interior.Color = RGB(255, 235, 156)       ' Yellow-ish
+                .Interior.Color = RGB(255, 235, 156)        ' Yellow-ish
                 .Font.Color = RGB(156, 101, 0)
             End With
 
             With .FormatConditions(3)
-                .Interior.Color = RGB(198, 239, 206)       ' Green-ish
+                .Interior.Color = RGB(198, 239, 206)        ' Green-ish
                 .Font.Color = RGB(0, 97, 0)
             End With
 
@@ -1937,9 +2414,9 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
         ' Sort first by state ascending, and then by age descending.
         srt.SortFields.Clear
         srt.SortFields.Add Key:=Columns("A"), _
-        SortOn:=xlSortOnValues, Order:=xlAscending
+                           SortOn:=xlSortOnValues, Order:=xlAscending
         srt.SortFields.Add Key:=Columns("B"), _
-        SortOn:=xlSortOnValues, Order:=xlAscending
+                           SortOn:=xlSortOnValues, Order:=xlAscending
         ' Set the sort range:
         srt.SetRange rng
         srt.Header = xlNo
@@ -1968,9 +2445,17 @@ Function Gen_NES(ByVal wbNew As Workbook, ByVal sFilePP As String, ByVal bPivot 
     Set cmdCommand2 = Nothing
     Set rstRecordset2 = Nothing
 
+    With wsPT
+        .PageSetup.Orientation = xlLandscape
+        .PageSetup.PrintArea = "$A$1:$AX$" + CStr(i - 1)
+        .PageSetup.Zoom = False
+        .PageSetup.FitToPagesWide = 3
+        .PageSetup.FitToPagesTall = False
 
-    wsPT.Name = "Portfolio Project Data"
-    Gen_NES = 0                                            '???????????????????
+
+        .Name = "Portfolio Project Data"
+    End With
+    Gen_NES = 0        '???????????????????
 
 
     ''''    Set rstRecordset = Nothing
@@ -2063,7 +2548,7 @@ Sub VarianceGradient(ByRef ws As Worksheet, ByVal lCol As Long, ByVal lLastRow A
 
         With ws
             For i = 3 To lLastRow
-                If .Cells(i, lCol) <> "" And .Cells(i, lCol + 1) <> "" Then 'lCol + 1 should be a Constant! (col 7)
+                If .Cells(i, lCol) <> "" And .Cells(i, lCol + 1) <> "" Then        'lCol + 1 should be a Constant! (col 7)
                     dVariance = .Cells(i, lCol)
                     If UCase(Left(.Cells(i, 1), 5)) <> "TOTAL" Then
                         If dVariance > 0 Then
@@ -2084,19 +2569,19 @@ Sub VarianceGradient(ByRef ws As Worksheet, ByVal lCol As Long, ByVal lLastRow A
                         Else
                             Select Case True
                                 Case (dVariance < MINNEGVAR) And (dVariance >= -1 * dPosQuarter)
-                                    .Cells(i, lCol).Interior.Color = RGB(255, 255, 183) 'Yellow gradient
+                                    .Cells(i, lCol).Interior.Color = RGB(255, 255, 183)        'Yellow gradient
                                     '.Cells(i, lCol).Interior.Color = RGB(196, 252, 188)        'Green gradient
 
                                 Case (dVariance < -1 * dPosQuarter) And (dVariance >= -2 * dPosQuarter)
-                                    .Cells(i, lCol).Interior.Color = RGB(255, 255, 117) 'Yellow gradient
+                                    .Cells(i, lCol).Interior.Color = RGB(255, 255, 117)        'Yellow gradient
                                     '.Cells(i, lCol).Interior.Color = RGB(127, 249, 111)        'Green gradient
 
                                 Case (dVariance < -2 * dPosQuarter) And (dVariance >= -3 * dPosQuarter)
-                                    .Cells(i, lCol).Interior.Color = RGB(255, 255, 71) 'Yellow gradient
+                                    .Cells(i, lCol).Interior.Color = RGB(255, 255, 71)        'Yellow gradient
                                     '.Cells(i, lCol).Interior.Color = RGB(42, 245, 15)        'Green gradient
 
                                 Case (dVariance < -3 * dPosQuarter)
-                                    .Cells(i, lCol).Interior.Color = RGB(255, 255, 0) 'Yellow gradient
+                                    .Cells(i, lCol).Interior.Color = RGB(255, 255, 0)        'Yellow gradient
                                     '.Cells(i, lCol).Interior.Color = RGB(26, 165, 7)        'Green gradient
 
                             End Select
@@ -2139,17 +2624,17 @@ Sub ListWithFilter(ByRef ws As Worksheet, ByVal cnConn As Object, ByVal rst As O
                     .Cells(i, 3).Value = Trim(rst.Fields("Project Name"))
 
                     If gbFY17 Then
-                        .Cells(i, 4).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - SW SAAS", "Project Code", rst.Fields("Project Code"))), "$#,##0") ' Budget
+                        .Cells(i, 4).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - SW SAAS", "Project Code", rst.Fields("Project Code"))), "$#,##0")        ' Budget
                     Else
-                        .Cells(i, 4).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - HW Amort", "Project Code", rst.Fields("Project Code"))), "$#,##0") ' Budget
+                        .Cells(i, 4).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - HW Amort", "Project Code", rst.Fields("Project Code"))), "$#,##0")        ' Budget
                     End If
 
-                    .Cells(i, 5).Value = Format(FetchValue(cnConn, "Do not remove1", "Roles", "NE (Actual + Rem. Plan)", "Project Code", rst.Fields("Project Code")), "$#,##0") ' Dashboard NE
+                    .Cells(i, 5).Value = Format(FetchValue(cnConn, "Do not remove1", "Roles", "NE (Actual + Rem. Plan)", "Project Code", rst.Fields("Project Code")), "$#,##0")        ' Dashboard NE
 
                     ''.Cells(i, 8).Value = "=G" & i & "-E" & i
 
 
-                    .Cells(i, 6) = "=IF((E" & i & "-D" & i & ")<>0,E" & i & "-D" & i & ","""")" 'Dashboard NE - Budget
+                    .Cells(i, 6) = "=IF((E" & i & "-D" & i & ")<>0,E" & i & "-D" & i & ","""")"        'Dashboard NE - Budget
                     .Cells(i, 6).NumberFormat = "$#,##0"
 
 
@@ -2168,9 +2653,9 @@ Sub ListWithFilter(ByRef ws As Worksheet, ByVal cnConn As Object, ByVal rst As O
                     .Cells(i, 7).NumberFormat = "0%"
 
 
-                    .Cells(i, 8).Value = Format(FetchValue(cnConn, "Names", "Roles", "Actual - Travel", "Project Code", rst.Fields("Project Code")), "$#,##0") 'YTD Actuals
+                    .Cells(i, 8).Value = Format(FetchValue(cnConn, "Names", "Roles", "Actual - Travel", "Project Code", rst.Fields("Project Code")), "$#,##0")        'YTD Actuals
 
-                    .Cells(i, 9).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - HW Maint", "Project Code", rst.Fields("Project Code"))), "$#,##0") ' Reporting NE
+                    .Cells(i, 9).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - HW Maint", "Project Code", rst.Fields("Project Code"))), "$#,##0")        ' Reporting NE
 
 
 
@@ -2184,8 +2669,8 @@ Sub ListWithFilter(ByRef ws As Worksheet, ByVal cnConn As Object, ByVal rst As O
                     If gbFY17 Then
                         ''''' NEED TO DEVELOP THIS FOR 2017 DASHBOARD!!!!!!!!!
                     Else
-                        .Cells(i, 10).Value = FetchValue(cnConn, "Report", "Roles", "'" + "Actual - MI" + "'", "Project Code", rst.Fields("Project Code")) ' Budget / CR Notes
-                        .Cells(i, 11).Value = FetchValue(cnConn, "NE Explanation", "Roles", "Actual - HW < $5K", "Project Code", rst.Fields("Project Code")) 'NE Explanation
+                        .Cells(i, 10).Value = FetchValue(cnConn, "Report", "Roles", "'" + "Actual - MI" + "'", "Project Code", rst.Fields("Project Code"))        ' Budget / CR Notes
+                        .Cells(i, 11).Value = FetchValue(cnConn, "NE Explanation", "Roles", "Actual - HW < $5K", "Project Code", rst.Fields("Project Code"))        'NE Explanation
                         .Cells(i, 11).Font.Color = vbBlue
                     End If
 
@@ -2228,13 +2713,13 @@ Sub ListExternals(ByRef ws As Worksheet, ByVal cnConn As Object, ByVal rst As Ob
                     .Cells(i, 3).Value = Trim(rst.Fields("Project Name"))
 
                     If gbFY17 Then
-                        .Cells(i, 4).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - SW SAAS", "Project Code", rst.Fields("Project Code"))), "$#,##0") ' Budget
+                        .Cells(i, 4).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - SW SAAS", "Project Code", rst.Fields("Project Code"))), "$#,##0")        ' Budget
                     Else
-                        .Cells(i, 4).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - HW Amort", "Project Code", rst.Fields("Project Code"))), "$#,##0") ' Budget
+                        .Cells(i, 4).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - HW Amort", "Project Code", rst.Fields("Project Code"))), "$#,##0")        ' Budget
                     End If
 
-                    .Cells(i, 5).Value = Format(FetchValue(cnConn, "Do not remove1", "Roles", "NE (Actual + Rem. Plan)", "Project Code", rst.Fields("Project Code")), "$#,##0") ' Dashboard NE
-                    .Cells(i, 6) = "=IF((E" & i & "-D" & i & ")<>0,E" & i & "-D" & i & ","""")" 'Dashboard NE - Budget
+                    .Cells(i, 5).Value = Format(FetchValue(cnConn, "Do not remove1", "Roles", "NE (Actual + Rem. Plan)", "Project Code", rst.Fields("Project Code")), "$#,##0")        ' Dashboard NE
+                    .Cells(i, 6) = "=IF((E" & i & "-D" & i & ")<>0,E" & i & "-D" & i & ","""")"        'Dashboard NE - Budget
                     .Cells(i, 6).NumberFormat = "$#,##0"
 
                     If .Cells(i, 6) <> "" Then
@@ -2246,8 +2731,8 @@ Sub ListExternals(ByRef ws As Worksheet, ByVal cnConn As Object, ByVal rst As Ob
                     '.Cells(i, 7) = "=IF(D" & i & "=0,-100%,IF(F" & i & "<>"""",F" & i & "/D" & i & ",""""))"
                     '.Cells(i, 7).NumberFormat = "0%"
 
-                    .Cells(i, 8).Value = Format(FetchValue(cnConn, "Names", "Roles", "Actual - Travel", "Project Code", rst.Fields("Project Code")), "$#,##0") 'YTD Actuals
-                    .Cells(i, 9).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - HW Maint", "Project Code", rst.Fields("Project Code"))), "$#,##0") ' Reporting NE
+                    .Cells(i, 8).Value = Format(FetchValue(cnConn, "Names", "Roles", "Actual - Travel", "Project Code", rst.Fields("Project Code")), "$#,##0")        'YTD Actuals
+                    .Cells(i, 9).Value = Format((FetchValue(cnConn, "Names", "Roles", "Actual - HW Maint", "Project Code", rst.Fields("Project Code"))), "$#,##0")        ' Reporting NE
 
                     ' If Actuals greater than Reporting NE, then overwrite Reporting NE with Actuals and highlith in redish
                     If .Cells(i, 8).Value > .Cells(i, 9).Value Then
@@ -2259,8 +2744,8 @@ Sub ListExternals(ByRef ws As Worksheet, ByVal cnConn As Object, ByVal rst As Ob
                     If gbFY17 Then
                         ''''' NEED TO DEVELOP THIS FOR 2017 DASHBOARD!!!!!!!!!
                     Else
-                        .Cells(i, 10).Value = FetchValue(cnConn, "Report", "Roles", "'" + "Actual - MI" + "'", "Project Code", rst.Fields("Project Code")) ' Budget / CR Notes
-                        .Cells(i, 11).Value = FetchValue(cnConn, "NE Explanation", "Roles", "Actual - HW < $5K", "Project Code", rst.Fields("Project Code")) 'NE Explanation
+                        .Cells(i, 10).Value = FetchValue(cnConn, "Report", "Roles", "'" + "Actual - MI" + "'", "Project Code", rst.Fields("Project Code"))        ' Budget / CR Notes
+                        .Cells(i, 11).Value = FetchValue(cnConn, "NE Explanation", "Roles", "Actual - HW < $5K", "Project Code", rst.Fields("Project Code"))        'NE Explanation
                         .Cells(i, 11).Font.Color = vbBlue
                     End If
 
@@ -2306,7 +2791,7 @@ Function Gen_NES_Short_GC(ByVal wbNew As Workbook, ByVal sFilePP As String) As D
     Dim wsPT As Worksheet
 
 
-    Dim sPPDB As String                                    'Portfolio Plan DB
+    Dim sPPDB As String        'Portfolio Plan DB
     Dim cnConn As Object
     Dim cmdCommand As Object
 
@@ -2327,6 +2812,8 @@ Function Gen_NES_Short_GC(ByVal wbNew As Workbook, ByVal sFilePP As String) As D
 
     'wbNew.Activate
 
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
 
     'wbNew is the D4A workbook...
     Set wsPT = wbNew.Sheets.Add
@@ -2338,7 +2825,7 @@ Function Gen_NES_Short_GC(ByVal wbNew As Workbook, ByVal sFilePP As String) As D
 
     '''sPPDB = gwsConfig.Range(gsLOCAL_FOLDER).Value + "\" + gwsConfig.Range(gsDB_NAME).Value        'PDASH.accdb
 
-    sPPDB = gsLocal_Folder + "\" + gwsConfig.Range(gsDB_NAME).Value 'PDASH.accdb
+    sPPDB = gsLocal_Folder + "\" + gwsConfig.Range(gsDB_NAME).Value        'PDASH.accdb
 
     Set cnConn = CreateObject("ADODB.Connection")
     With cnConn
@@ -2418,11 +2905,11 @@ Function Gen_NES_Short_GC(ByVal wbNew As Workbook, ByVal sFilePP As String) As D
         .Range(.Cells(1, 1), .Cells(2, 11)).WrapText = True
         .Range(.Cells(1, 1), .Cells(2, 11)).HorizontalAlignment = xlCenter
         .Range(.Cells(1, 1), .Cells(2, 11)).VerticalAlignment = xlTop
-        .Range(.Cells(1, 1), .Cells(2, 11)).Interior.Color = RGB(80, 130, 190) ' RGB(238, 236, 225)
-        .Range(.Cells(1, 1), .Cells(2, 11)).Font.Color = vbWhite ' RGB(31, 73, 125)
+        .Range(.Cells(1, 1), .Cells(2, 11)).Interior.Color = RGB(80, 130, 190)        ' RGB(238, 236, 225)
+        .Range(.Cells(1, 1), .Cells(2, 11)).Font.Color = vbWhite        ' RGB(31, 73, 125)
 
-        Application.ScreenUpdating = False
-        Application.Calculation = xlCalculationManual
+        '        Application.ScreenUpdating = False
+        '        Application.Calculation = xlCalculationManual
 
         Set srt = .Sort
 
@@ -2499,7 +2986,7 @@ Function Gen_NES_Short_GC(ByVal wbNew As Workbook, ByVal sFilePP As String) As D
 
 
         rstRecordset.moveFirst
-        Call ListExternals(wsPT, cnConn, rstRecordset, i, dMaxNegVar, dMaxPosVar) ' Make it function!!!!
+        Call ListExternals(wsPT, cnConn, rstRecordset, i, dMaxNegVar, dMaxPosVar)        ' Make it function!!!!
         '''Call ListWithFilter(wsPT, cnConn, rstRecordset, i, "LifeCo;IG", POS)
 
         If i > lStart Then
@@ -2601,8 +3088,8 @@ Function Gen_NES_Short_GC(ByVal wbNew As Workbook, ByVal sFilePP As String) As D
                 .Range(.Cells(j, 1), .Cells(j, 11)).Borders(xlEdgeBottom).LineStyle = xlDouble
                 .Range(.Cells(j, 1), .Cells(j, 11)).Borders(xlEdgeBottom).Color = RGB(150, 180, 215)
 
-                .Range(.Cells(j, 1), .Cells(j, 11)).Interior.Color = RGB(184, 204, 228) ' RGB(238, 236, 225)
-                .Range(.Cells(j, 1), .Cells(j, 11)).Font.Color = vbBlack ' RGB(31, 73, 125)
+                .Range(.Cells(j, 1), .Cells(j, 11)).Interior.Color = RGB(184, 204, 228)        ' RGB(238, 236, 225)
+                .Range(.Cells(j, 1), .Cells(j, 11)).Font.Color = vbBlack        ' RGB(31, 73, 125)
             Else
                 .Range(.Cells(j, 1), .Cells(j, 11)).Borders(xlEdgeBottom).LineStyle = xlContinuous
                 .Range(.Cells(j, 1), .Cells(j, 11)).Borders(xlEdgeBottom).Color = RGB(150, 180, 215)
@@ -2623,7 +3110,7 @@ Function Gen_NES_Short_GC(ByVal wbNew As Workbook, ByVal sFilePP As String) As D
 
 
 
-        Call VarianceGradient(wsPT, 6, i - 1, dMaxNegVar, dMaxPosVar) 'Make it function!
+        Call VarianceGradient(wsPT, 6, i - 1, dMaxNegVar, dMaxPosVar)        'Make it function!
 
 
         ' Dashboard NE column formatting
@@ -2674,9 +3161,9 @@ Function Gen_NES_Short_GC(ByVal wbNew As Workbook, ByVal sFilePP As String) As D
         ' Sort first by state ascending, and then by age descending.
         ''''srt.SortFields.Clear
         '''srt.SortFields.Add Key:=Columns("A"), _
-        SortOn:=xlSortOnValues, Order:=xlAscending
+         SortOn:=xlSortOnValues, Order:=xlAscending
         ''''srt.SortFields.Add Key:=Columns("B"), _
-        SortOn:=xlSortOnValues, Order:=xlAscending
+         SortOn:=xlSortOnValues, Order:=xlAscending
         ' Set the sort range:
         ''''srt.SetRange rng
         '''srt.Header = xlNo
@@ -2714,7 +3201,7 @@ Function Gen_NES_Short_GC(ByVal wbNew As Workbook, ByVal sFilePP As String) As D
     wsPT.Range("D3").Select
     ActiveWindow.FreezePanes = True
 
-    Gen_NES_Short_GC = 0                                   '???????????????????
+    Gen_NES_Short_GC = 0        '???????????????????
 
     ''''    Set rstRecordset = Nothing
 

@@ -197,13 +197,13 @@ Function WindowText(hWnd As Long) As String
     ' WindowText
     ' This just wraps up GetWindowText.
     ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    Dim S As String
+    Dim s As String
     Dim N As Long
     N = 255
-    S = String$(N, vbNullChar)
-    N = GetWindowText(hWnd, S, N)
+    s = String$(N, vbNullChar)
+    N = GetWindowText(hWnd, s, N)
     If N > 0 Then
-        WindowText = Left(S, N)
+        WindowText = Left(s, N)
     Else
         WindowText = vbNullString
     End If
@@ -215,13 +215,13 @@ Function WindowClassName(hWnd As Long) As String
     ' This just wraps up GetClassName.
     ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-    Dim S As String
+    Dim s As String
     Dim N As Long
     N = 255
-    S = String$(N, vbNullChar)
-    N = GetClassName(hWnd, S, N)
+    s = String$(N, vbNullChar)
+    N = GetClassName(hWnd, s, N)
     If N > 0 Then
-        WindowClassName = Left(S, N)
+        WindowClassName = Left(s, N)
     Else
         WindowClassName = vbNullString
     End If
