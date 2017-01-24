@@ -27,6 +27,7 @@ Sub Access_MakeTable(ByVal sFile As String, ByVal bAllText As Boolean)
     Dim tblnew As Object
     Dim scn As Object
 
+    Dim idxPrimary As Object
 
     ' Specific code for 2017
     gbFY17 = (InStr(1, gsPP_Filename, "2017") > 0)
@@ -47,7 +48,28 @@ Sub Access_MakeTable(ByVal sFile As String, ByVal bAllText As Boolean)
     If bAllText Then
         '''' IMPORT EVERYTHING AS STRING!!!!
         xlLoc = "'" & sFile & "'[Excel 12.0;HDR=YES;IMEX=1;]"
-        sSql = "SELECT * INTO tbl_PortfolioPlan FROM [Portfolio Plan$A3:AG10000] IN " & xlLoc & ";" 'Remove hardcoding!!!!!!!!!!!!!!!!!!!!!
+        sSql = "SELECT * INTO tbl_PortfolioPlan FROM [Portfolio Plan$A3:AG10000] IN " & xlLoc & ";"        'Remove hardcoding!!!!!!!!!!!!!!!!!!!!!
+
+        scn.Execute sSql
+        ' Debug.Print sSql
+
+        ' Now the table exists!
+        Set tblnew = oCatalog.tables("tbl_PortfolioPlan")
+
+        ' Here I create the Index AFTER running the SQL statement!
+        Set idxPrimary = CreateObject("ADOX.Index")
+        With idxPrimary
+            .Name = "ProjCode"
+            ''''.PrimaryKey = True
+            .Unique = False
+            ''.Columns.Append "Roles"
+            .Columns.Append "Project Code"
+            .IndexNulls = 0        ' adIndexNullsAllow
+            tblnew.Indexes.Append idxPrimary
+            Set idxPrimary = Nothing
+        End With
+
+
     Else
         Set tblnew = CreateObject("ADOX.Table")
         Set c = CreateObject("ADOX.Column")
@@ -110,18 +132,36 @@ Sub Access_MakeTable(ByVal sFile As String, ByVal bAllText As Boolean)
 
         End With
 
-        oCatalog.Tables.Append tblnew
-
+        oCatalog.tables.Append tblnew
 
         sRange = "[" & "Portfolio Plan" & "$A3:AG10000]"
 
-        sSql = "INSERT INTO tbl_PortfolioPlan([Project Code]) " ' No need to enumerate the rest of the fields...
+        sSql = "INSERT INTO tbl_PortfolioPlan([Project Code]) "        ' No need to enumerate the rest of the fields...
         sSql = sSql & "SELECT * FROM [Excel 12.0 Macro;HDR=YES;DATABASE=" & sFile & "]." & sRange
 
+
+        ' Here I create the Index before running the SQL statement!
+
+        Set idxPrimary = CreateObject("ADOX.Index")
+        With idxPrimary
+            .Name = "ProjCode"
+            ''''.PrimaryKey = True
+            .Unique = False
+            ''.Columns.Append "Roles"
+            .Columns.Append "Project Code"
+            .IndexNulls = 0        ' adIndexNullsAllow
+            tblnew.Indexes.Append idxPrimary
+            Set idxPrimary = Nothing
+        End With
+
+
+        scn.Execute sSql
+        ' Debug.Print sSql
+
     End If
-    scn.Execute sSql
-    ' Debug.Print sSql
+
     scn.Close
+
 
 finished:
 
@@ -178,10 +218,10 @@ Sub loadResTable(ByVal sFile As String)
     xlLoc = "'" & sFile & "'[Excel 12.0;HDR=YES;IMEX=1;]"        ' '''' IMPORT EVERYTHING AS STRING!!!!
 
     Set scn = oCatalog.activeconnection
-    scn.cursorlocation = 3                                 'aduseclient
+    scn.cursorlocation = 3        'aduseclient
 
 
-    sSql = "SELECT * INTO tbl_Resources FROM [QA$A3:BL300] IN " & xlLoc & ";" 'Remove hardcoding!!!!!!!!!!!!!!!!!!!!!
+    sSql = "SELECT * INTO tbl_Resources FROM [QA$A3:BL300] IN " & xlLoc & ";"        'Remove hardcoding!!!!!!!!!!!!!!!!!!!!!
     scn.Execute sSql
 
     sSql = "INSERT INTO tbl_Resources SELECT * FROM [Excel 12.0 Macro;HDR=YES;DATABASE=" & sFile & "].[SAN$A3:BL500]"
